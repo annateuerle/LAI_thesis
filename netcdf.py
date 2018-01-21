@@ -1,4 +1,3 @@
-
 # coding: utf-8
 import datetime # Python standard library datetime  module
 import numpy
@@ -151,6 +150,8 @@ def draw_plot(time_idx):
 
     # A plot of the temperature profile for Darwin in 2012
     #fig = plt.figure()
+    # A plot of the precipitation profile
+    fig = plt.figure()
     dt_lty = dt_time[-24:]
     pre_lty = pre[-24:]
 

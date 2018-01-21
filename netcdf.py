@@ -149,9 +149,9 @@ def draw_plot(time_idx):
     lon_idx = numpy.abs(lons - darwin['lon']).argmin()
 
     # A plot of the temperature profile for Darwin in 2012
-    #fig = plt.figure()
+    #fig = pyplot.figure()
     # A plot of the precipitation profile
-    fig = plt.figure()
+    fig = pyplot.figure()
     dt_lty = dt_time[-24:]
     pre_lty = pre[-24:]
 
@@ -160,10 +160,10 @@ def draw_plot(time_idx):
     pyplot.text(dt_lty[time_idx], pre_lty[time_idx, lat_idx, lon_idx], dot_time, ha='right')
 
     # fig.autofmt_xdate()
-    # plt.ylabel("%s (%s)" % (nc.variables['pre'].var_desc,\
+    # pyplot.ylabel("%s (%s)" % (nc.variables['pre'].var_desc,\
     #                        nc.variables['pre'].units))
     pyplot.xlabel("Time")
-    # plt.title("%s from\n%s for %s" % (nc.variables['pre'].var_desc,\
+    # pyplot.title("%s from\n%s for %s" % (nc.variables['pre'].var_desc,\
     #                                  darwin['name'], cur_time.year))
     pyplot.show()
 

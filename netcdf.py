@@ -3,10 +3,10 @@
 import datetime # Python standard library datetime  module
 import numpy
 import netCDF4
-from netCDF4 import Dataset  as netcdf
+from netCDF4 import Dataset as netcdf
 
 import matplotlib
-import matplotlib.pyplot as plt
+from  matplotlib import pyplot
 import mpl_toolkits
 from mpl_toolkits.basemap import Basemap, addcyclic, shiftgrid
 
@@ -89,30 +89,32 @@ pre = nc.variables['pre'][:]
 
 
 time_idx = 12  # some random month
-# Python and the renalaysis are slightly off in time so this fixes that problem
-offset = datetime.timedelta(hours=48)
-# List of all times in the file as datetime objects
+
 
 def fix_time():
+    """
+    # List of all times in the file as datetime objects
+    """
     dt_time = []
     for t in time:
         start = datetime.date(1900, 1, 1)  # This is the "days since" part
-
         delta = datetime.timedelta(int(t))  # Create a time delta object from the number of days
-        offset = start + delta  # Add the specified number of days to 1900
+        offset = start + delta # Add the specified number of days to 1900
         dt_time.append(offset)
-    cur_time = dt_time[time_idx]
-    return cur_time, dt_time
+        # print(offset)
+
+    return dt_time
 
 
 def draw_basemap():
     """Plot of global temperature on our random day"""
     #
-    fig = plt.figure()
-    #fig.subplots_adjust(left=0., right=1., bottom=0., top=0.9)
+    fig = pyplot.figure()
+
+    fig.subplots_adjust(left=0., right=1., bottom=0., top=0.9)
     # Setup the map. See http://matplotlib.org/basemap/users/mapsetup.html
     # for other projections.
-    #m = Basemap(projection='moll', llcrnrlat=-90, urcrnrlat=90, llcrnrlon=0, urcrnrlon=360, resolution='c', lon_0=0)
+    # m = Basemap(projection='moll', llcrnrlat=-90, urcrnrlat=90, llcrnrlon=0, urcrnrlon=360, resolution='c', lon_0=0)
     m = Basemap(projection='moll', resolution='c', lon_0=0)
 
     m.drawcoastlines()
@@ -126,43 +128,46 @@ def draw_basemap():
     # Transforms lat/lon into plotting coordinates for projection
     x, y = m(lon2d, lat2d)
     # Plot of pre with 11 contour intervals
-    cs = m.contourf(x, y, pre_cyclic, 50, cmap=plt.cm.Spectral_r)
-    cbar = plt.colorbar(cs, orientation='horizontal', shrink=0.9)
+    cs = m.contourf(x, y, pre_cyclic, 20, cmap=pyplot.cm.Spectral_r)
+    cbar = pyplot.colorbar(cs, orientation='horizontal', shrink=0.9)
     cbar.set_label("Anna pre plot(ml)")
-    global cur_time
-    plt.title("%s on %s" % ("Anna pre PLOT", cur_time))
-    plt.show()
-    fig.show()
+    pyplot.title("Anna pre PLOT")
+    pyplot.show()
 
 
+def draw_plot(time_idx):
+    """
 
-def draw_plot():
+    :param fig:
+    :return:
+    """
+    dot_time = dt_time[time_idx]
 
     darwin = {'name': 'Darwin, Australia', 'lat': -12.45, 'lon': 130.83}
 
     # Find the nearest latitude and longitude for Darwin
-    lat_idx = np.abs(lats - darwin['lat']).argmin()
-    lon_idx = np.abs(lons - darwin['lon']).argmin()
+    lat_idx = numpy.abs(lats - darwin['lat']).argmin()
+    lon_idx = numpy.abs(lons - darwin['lon']).argmin()
 
     # A plot of the temperature profile for Darwin in 2012
-    fig = plt.figure()
+    #fig = plt.figure()
     dt_lty = dt_time[-24:]
     pre_lty = pre[-24:]
 
-    plt.plot(dt_lty, pre_lty[:, lat_idx, lon_idx], c='r')
-    plt.plot(dt_lty[time_idx], pre_lty[time_idx, lat_idx, lon_idx], c='b', marker='o')
-    plt.text(dt_lty[time_idx], pre_lty[time_idx, lat_idx, lon_idx], cur_time, ha='right')
+    pyplot.plot(dt_lty, pre_lty[:, lat_idx, lon_idx], c='r')
+    pyplot.plot(dt_lty[time_idx], pre_lty[time_idx, lat_idx, lon_idx], c='b', marker='o')
+    pyplot.text(dt_lty[time_idx], pre_lty[time_idx, lat_idx, lon_idx], dot_time, ha='right')
 
     # fig.autofmt_xdate()
     # plt.ylabel("%s (%s)" % (nc.variables['pre'].var_desc,\
     #                        nc.variables['pre'].units))
-    plt.xlabel("Time")
+    pyplot.xlabel("Time")
     # plt.title("%s from\n%s for %s" % (nc.variables['pre'].var_desc,\
     #                                  darwin['name'], cur_time.year))
-    plt.show()
-    fig.show()
+    pyplot.show()
 
-cur_time, dt_time = fix_time()
-#draw_plot()
+
+dt_time = fix_time()
+
+draw_plot(time_idx)
 draw_basemap()
-#print(pre[119][100][:])

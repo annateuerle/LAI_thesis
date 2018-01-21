@@ -9,10 +9,11 @@ from  matplotlib import pyplot
 import mpl_toolkits
 from mpl_toolkits.basemap import Basemap, addcyclic, shiftgrid
 
-startyear = 1991
-endyear = 2000
+startyear = 2001 # put in the start year of dataset
+endyear = 2010 # put in the end year of dataset
+nc_var = 'tmp' # put in the climate variable of dataset
 
-nc = netcdf(f'cru_ts3.24.01.{startyear}.{endyear}.pre.dat.nc','r')
+nc = netcdf(f'cru_ts3.24.01.{startyear}.{endyear}.{nc_var}.dat.nc','r')
 
 
 def ncdump(nc_fid, verb=True):
@@ -86,8 +87,7 @@ nc_attrs, nc_dims, nc_vars = ncdump(nc)
 lats = nc.variables['lat'][:]  # extract/copy the data
 lons = nc.variables['lon'][:]
 time = nc.variables['time'][:]
-#tmn = nc_fid.variables['tmn'][:]  # shape is time, lat, lon as shown above
-pre = nc.variables['pre'][:]
+nc_ds = nc.variables[nc_var][:]
 
 
 time_idx = 42  # some random month counting from the startyear
@@ -122,7 +122,7 @@ def draw_basemap():
     m.drawcoastlines()
     m.drawmapboundary()
     # Make the plot continuous
-    pre_cyclic, lons_cyclic = addcyclic(pre[time_idx, :, :], lons)
+    ds_cyclic, lons_cyclic = addcyclic(nc_ds[time_idx, :, :], lons)
     # Shift the grid so lons go from -180 to 180 instead of 0 to 360.
     #pre_cyclic, lons_cyclic = shiftgrid(180., pre_cyclic, lons_cyclic, start=False)
     # Create 2D lat/lon arrays for Basemap
@@ -130,11 +130,11 @@ def draw_basemap():
     # Transforms lat/lon into plotting coordinates for projection
     x, y = m(lon2d, lat2d)
     # Plot of pre with 11 contour intervals
-    cs = m.contourf(x, y, pre_cyclic, 20, cmap=pyplot.cm.Spectral_r)
+    cs = m.contourf(x, y, ds_cyclic, 20, cmap=pyplot.cm.Spectral_r)
     cbar = pyplot.colorbar(cs, orientation='horizontal', shrink=0.9)
     dot_time = dt_time[time_idx]
     #cbar.set_label
-    pyplot.title(f"Global precipitation for {dot_time.year}.{dot_time.month}")
+    pyplot.title(f"Global {nc_var} for {dot_time.year}.{dot_time.month}")
     pyplot.show()
 
 
@@ -153,22 +153,18 @@ def draw_plot(time_idx):
 
     # A plot
     #fig = pyplot.figure()
-    # A plot of the precipitation profile
     fig = pyplot.figure()
-    dt_lty = dt_time[:]
-    pre_lty = pre[:]
-    dot_time = dt_lty[time_idx]
+    dot_time = dt_time[time_idx]
 
-    pyplot.plot(dt_lty, pre_lty[:, lat_idx, lon_idx], c='r')
-    pyplot.plot(dt_lty[time_idx], pre_lty[time_idx, lat_idx, lon_idx], c='b', marker='o')
-    pyplot.text(dt_lty[time_idx], pre_lty[time_idx, lat_idx, lon_idx], dot_time, ha='right')
+    pyplot.plot(dt_time, nc_ds[:, lat_idx, lon_idx], c='r')
+    pyplot.plot(dt_time[time_idx], nc_ds[time_idx, lat_idx, lon_idx], c='b', marker='o')
+    pyplot.text(dt_time[time_idx], nc_ds[time_idx, lat_idx, lon_idx], dot_time, ha='right')
 
     # fig.autofmt_xdate()
     # pyplot.ylabel("%s (%s)" % (nc.variables['pre'].var_desc,\
     #                        nc.variables['pre'].units))
     pyplot.xlabel("Time")
-    # pyplot.title("%s from\n%s for %s" % (nc.variables['pre'].var_desc,\
-    #                                  amsterdam['name'], cur_time.year))
+    pyplot.title(f"Local {nc_var} from {startyear} to {endyear}")
     pyplot.show()
 
 

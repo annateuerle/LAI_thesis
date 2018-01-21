@@ -9,7 +9,10 @@ from  matplotlib import pyplot
 import mpl_toolkits
 from mpl_toolkits.basemap import Basemap, addcyclic, shiftgrid
 
-nc = netcdf('cru_ts3.24.01.1991.2000.pre.dat.nc','r')
+startyear = 1991
+endyear = 2000
+
+nc = netcdf(f'cru_ts3.24.01.{startyear}.{endyear}.pre.dat.nc','r')
 
 
 def ncdump(nc_fid, verb=True):
@@ -87,7 +90,7 @@ time = nc.variables['time'][:]
 pre = nc.variables['pre'][:]
 
 
-time_idx = 12  # some random month
+time_idx = 42  # some random month counting from the startyear
 
 
 def fix_time():
@@ -129,8 +132,9 @@ def draw_basemap():
     # Plot of pre with 11 contour intervals
     cs = m.contourf(x, y, pre_cyclic, 20, cmap=pyplot.cm.Spectral_r)
     cbar = pyplot.colorbar(cs, orientation='horizontal', shrink=0.9)
-    cbar.set_label("Precipitation")
-    pyplot.title("Precipitation")
+    dot_time = dt_time[time_idx]
+    #cbar.set_label
+    pyplot.title(f"Global precipitation for {dot_time.year}.{dot_time.month}")
     pyplot.show()
 
 
@@ -140,20 +144,20 @@ def draw_plot(time_idx):
     :param fig:
     :return:
     """
-    dot_time = dt_time[time_idx]
 
-    darwin = {'name': 'Darwin, Australia', 'lat': -12.45, 'lon': 130.83}
+    amsterdam = {'name': 'Amsterdam, Netherlands', 'lat': 52.37, 'lon': 4.89}
 
-    # Find the nearest latitude and longitude for Darwin
-    lat_idx = numpy.abs(lats - darwin['lat']).argmin()
-    lon_idx = numpy.abs(lons - darwin['lon']).argmin()
+    # Find the nearest latitude and longitude
+    lat_idx = numpy.abs(lats - amsterdam['lat']).argmin()
+    lon_idx = numpy.abs(lons - amsterdam['lon']).argmin()
 
-    # A plot of the temperature profile for Darwin in 2012
+    # A plot
     #fig = pyplot.figure()
     # A plot of the precipitation profile
     fig = pyplot.figure()
-    dt_lty = dt_time[-24:]
-    pre_lty = pre[-24:]
+    dt_lty = dt_time[:]
+    pre_lty = pre[:]
+    dot_time = dt_lty[time_idx]
 
     pyplot.plot(dt_lty, pre_lty[:, lat_idx, lon_idx], c='r')
     pyplot.plot(dt_lty[time_idx], pre_lty[time_idx, lat_idx, lon_idx], c='b', marker='o')
@@ -164,7 +168,7 @@ def draw_plot(time_idx):
     #                        nc.variables['pre'].units))
     pyplot.xlabel("Time")
     # pyplot.title("%s from\n%s for %s" % (nc.variables['pre'].var_desc,\
-    #                                  darwin['name'], cur_time.year))
+    #                                  amsterdam['name'], cur_time.year))
     pyplot.show()
 
 

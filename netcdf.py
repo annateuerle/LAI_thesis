@@ -1,4 +1,3 @@
-
 # coding: utf-8
 import datetime # Python standard library datetime  module
 import numpy
@@ -10,6 +9,7 @@ import matplotlib.pyplot as plt
 import mpl_toolkits
 from mpl_toolkits.basemap import Basemap, addcyclic, shiftgrid
 
+    #Data source
 nc = netcdf('cru_ts3.24.01.2001.2010.pre.dat.nc','r')
 
 
@@ -128,7 +128,7 @@ def draw_basemap():
     # Plot of pre with 11 contour intervals
     cs = m.contourf(x, y, pre_cyclic, 50, cmap=plt.cm.Spectral_r)
     cbar = plt.colorbar(cs, orientation='horizontal', shrink=0.9)
-    cbar.set_label("Anna pre plot(ml)")
+    cbar.set_label("Precipitation plot(mm)")
     global cur_time
     plt.title("%s on %s" % ("Anna pre PLOT", cur_time))
     plt.show()
@@ -137,14 +137,14 @@ def draw_basemap():
 
 
 def draw_plot():
-
+    #Specific location for the plot
     darwin = {'name': 'Darwin, Australia', 'lat': -12.45, 'lon': 130.83}
 
-    # Find the nearest latitude and longitude for Darwin
-    lat_idx = np.abs(lats - darwin['lat']).argmin()
-    lon_idx = np.abs(lons - darwin['lon']).argmin()
+    # Find the nearest latitude and longitude
+    lat_idx = numpy.abs(lats - darwin['lat']).argmin()
+    lon_idx = numpy.abs(lons - darwin['lon']).argmin()
 
-    # A plot of the temperature profile for Darwin in 2012
+    # A plot of the precipitation profile
     fig = plt.figure()
     dt_lty = dt_time[-24:]
     pre_lty = pre[-24:]
@@ -163,6 +163,10 @@ def draw_plot():
     fig.show()
 
 cur_time, dt_time = fix_time()
-#draw_plot()
-draw_basemap()
+#IMPORTANT One output at the time. If you want to run a plot then inactivet a basemap and opposite.
+#Draw plot
+draw_plot()
+
+#Draw basemap
+#draw_basemap()
 #print(pre[119][100][:])

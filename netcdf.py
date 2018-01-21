@@ -9,7 +9,7 @@ from  matplotlib import pyplot
 import mpl_toolkits
 from mpl_toolkits.basemap import Basemap, addcyclic, shiftgrid
 
-nc = netcdf('cru_ts3.24.01.2001.2010.pre.dat.nc','r')
+nc = netcdf('cru_ts3.24.01.1991.2000.pre.dat.nc','r')
 
 
 def ncdump(nc_fid, verb=True):
@@ -129,8 +129,8 @@ def draw_basemap():
     # Plot of pre with 11 contour intervals
     cs = m.contourf(x, y, pre_cyclic, 20, cmap=pyplot.cm.Spectral_r)
     cbar = pyplot.colorbar(cs, orientation='horizontal', shrink=0.9)
-    cbar.set_label("Anna pre plot(ml)")
-    pyplot.title("Anna pre PLOT")
+    cbar.set_label("Precipitation")
+    pyplot.title("Precipitation")
     pyplot.show()
 
 

@@ -1,21 +1,16 @@
 
 # coding: utf-8
-
-# In[4]:
-
-
-import datetime as dt  # Python standard library datetime  module
-import numpy as np
-import  netCDF4
+import datetime # Python standard library datetime  module
+import numpy
+import netCDF4
 from netCDF4 import Dataset  as netcdf
-nc = netcdf('cru_ts3.24.01.2001.2010.pre.dat.nc','r')
+
 import matplotlib
 import matplotlib.pyplot as plt
 import mpl_toolkits
 from mpl_toolkits.basemap import Basemap, addcyclic, shiftgrid
 
-
-# In[9]:
+nc = netcdf('cru_ts3.24.01.2001.2010.pre.dat.nc','r')
 
 
 def ncdump(nc_fid, verb=True):
@@ -83,9 +78,6 @@ def ncdump(nc_fid, verb=True):
     return nc_attrs, nc_dims, nc_vars
 
 
-# In[18]:
-
-
 
 nc_attrs, nc_dims, nc_vars = ncdump(nc)
 # Extract data from NetCDF file
@@ -96,68 +88,81 @@ time = nc.variables['time'][:]
 pre = nc.variables['pre'][:]
 
 
-# In[11]:
-
-
-time_idx = 60  # some random month
+time_idx = 12  # some random month
 # Python and the renalaysis are slightly off in time so this fixes that problem
-offset = dt.timedelta(hours=48)
+offset = datetime.timedelta(hours=48)
 # List of all times in the file as datetime objects
-dt_time = [dt.date(1, 1, 1) + dt.timedelta(hours=t) - offset           for t in time]
-cur_time = dt_time[time_idx]
+
+def fix_time():
+    dt_time = []
+    for t in time:
+        start = datetime.date(1900, 1, 1)  # This is the "days since" part
+
+        delta = datetime.timedelta(int(t))  # Create a time delta object from the number of days
+        offset = start + delta  # Add the specified number of days to 1900
+        dt_time.append(offset)
+    cur_time = dt_time[time_idx]
+    return cur_time, dt_time
 
 
-# In[ ]:
+def draw_basemap():
+    """Plot of global temperature on our random day"""
+    #
+    fig = plt.figure()
+    #fig.subplots_adjust(left=0., right=1., bottom=0., top=0.9)
+    # Setup the map. See http://matplotlib.org/basemap/users/mapsetup.html
+    # for other projections.
+    #m = Basemap(projection='moll', llcrnrlat=-90, urcrnrlat=90, llcrnrlon=0, urcrnrlon=360, resolution='c', lon_0=0)
+    m = Basemap(projection='moll', resolution='c', lon_0=0)
+
+    m.drawcoastlines()
+    m.drawmapboundary()
+    # Make the plot continuous
+    pre_cyclic, lons_cyclic = addcyclic(pre[time_idx, :, :], lons)
+    # Shift the grid so lons go from -180 to 180 instead of 0 to 360.
+    #pre_cyclic, lons_cyclic = shiftgrid(180., pre_cyclic, lons_cyclic, start=False)
+    # Create 2D lat/lon arrays for Basemap
+    lon2d, lat2d = numpy.meshgrid(lons_cyclic, lats)
+    # Transforms lat/lon into plotting coordinates for projection
+    x, y = m(lon2d, lat2d)
+    # Plot of pre with 11 contour intervals
+    cs = m.contourf(x, y, pre_cyclic, 50, cmap=plt.cm.Spectral_r)
+    cbar = plt.colorbar(cs, orientation='horizontal', shrink=0.9)
+    cbar.set_label("Anna pre plot(ml)")
+    global cur_time
+    plt.title("%s on %s" % ("Anna pre PLOT", cur_time))
+    plt.show()
+    fig.show()
 
 
-# Plot of global temperature on our random day
-fig = plt.figure()
-fig.subplots_adjust(left=0., right=1., bottom=0., top=0.9)
-# Setup the map. See http://matplotlib.org/basemap/users/mapsetup.html
-# for other projections.
-m = Basemap(projection='moll', llcrnrlat=-90, urcrnrlat=90,            llcrnrlon=0, urcrnrlon=360, resolution='c', lon_0=0)
-m.drawcoastlines()
-m.drawmapboundary()
-# Make the plot continuous
 
+def draw_plot():
 
-# In[ ]:
+    darwin = {'name': 'Darwin, Australia', 'lat': -12.45, 'lon': 130.83}
 
+    # Find the nearest latitude and longitude for Darwin
+    lat_idx = np.abs(lats - darwin['lat']).argmin()
+    lon_idx = np.abs(lons - darwin['lon']).argmin()
 
-# Make the plot continuous
-air_cyclic, lons_cyclic = addcyclic(air[time_idx, :, :], lons)
-# Shift the grid so lons go from -180 to 180 instead of 0 to 360.
-air_cyclic, lons_cyclic = shiftgrid(180., air_cyclic, lons_cyclic, start=False)
-# Create 2D lat/lon arrays for Basemap
-lon2d, lat2d = np.meshgrid(lons_cyclic, lats)
-# Transforms lat/lon into plotting coordinates for projection
-x, y = m(lon2d, lat2d)
-# Plot of air temperature with 11 contour intervals
-cs = m.contourf(x, y, air_cyclic, 11, cmap=plt.cm.Spectral_r)
-cbar = plt.colorbar(cs, orientation='horizontal', shrink=0.5)
-cbar.set_label("%s (%s)" % (nc_fid.variables['air'].var_desc,                            nc_fid.variables['air'].units))
-plt.title("%s on %s" % (nc_fid.variables['air'].var_desc, cur_time))
+    # A plot of the temperature profile for Darwin in 2012
+    fig = plt.figure()
+    dt_lty = dt_time[-24:]
+    pre_lty = pre[-24:]
 
+    plt.plot(dt_lty, pre_lty[:, lat_idx, lon_idx], c='r')
+    plt.plot(dt_lty[time_idx], pre_lty[time_idx, lat_idx, lon_idx], c='b', marker='o')
+    plt.text(dt_lty[time_idx], pre_lty[time_idx, lat_idx, lon_idx], cur_time, ha='right')
 
-# In[24]:
+    # fig.autofmt_xdate()
+    # plt.ylabel("%s (%s)" % (nc.variables['pre'].var_desc,\
+    #                        nc.variables['pre'].units))
+    plt.xlabel("Time")
+    # plt.title("%s from\n%s for %s" % (nc.variables['pre'].var_desc,\
+    #                                  darwin['name'], cur_time.year))
+    plt.show()
+    fig.show()
 
-
-darwin = {'name': 'Darwin, Australia', 'lat': -12.45, 'lon': 130.83}
-
-# Find the nearest latitude and longitude for Darwin
-lat_idx = np.abs(lats - darwin['lat']).argmin()
-lon_idx = np.abs(lons - darwin['lon']).argmin()
-
-# A plot of the temperature profile for Darwin in 2012
-#fig = plt.figure()
-plt.plot(dt_time, pre[:, lat_idx, lon_idx], c='r')
-plt.plot(dt_time[time_idx], pre[time_idx, lat_idx, lon_idx], c='b', marker='o')
-plt.text(dt_time[time_idx], pre[time_idx, lat_idx, lon_idx], cur_time,         ha='right')
-#fig.autofmt_xdate()
-#plt.ylabel("%s (%s)" % (nc.variables['pre'].var_desc,\
-#                        nc.variables['pre'].units))
-plt.xlabel("Time")
-#plt.title("%s from\n%s for %s" % (nc.variables['pre'].var_desc,\
-#                                  darwin['name'], cur_time.year))
-plt.show()
-
+cur_time, dt_time = fix_time()
+#draw_plot()
+draw_basemap()
+#print(pre[119][100][:])

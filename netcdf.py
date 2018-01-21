@@ -11,7 +11,7 @@ from mpl_toolkits.basemap import Basemap, addcyclic, shiftgrid
 
 startyear = 2001 # put in the start year of dataset
 endyear = 2010 # put in the end year of dataset
-nc_var = 'tmp' # put in the climate variable of dataset
+nc_var = 'pre' # put in the climate variable of dataset
 
 nc = netcdf(f'cru_ts3.24.01.{startyear}.{endyear}.{nc_var}.dat.nc','r')
 

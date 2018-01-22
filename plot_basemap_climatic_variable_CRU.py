@@ -124,7 +124,7 @@ def draw_basemap():
     # Make the plot continuous
     ds_cyclic, lons_cyclic = addcyclic(nc_ds[time_idx, :, :], lons)
     # Shift the grid so lons go from -180 to 180 instead of 0 to 360.
-    #pre_cyclic, lons_cyclic = shiftgrid(180., pre_cyclic, lons_cyclic, start=False)
+    pre_cyclic, lons_cyclic = shiftgrid(180., pre_cyclic, lons_cyclic, start=False)
     # Create 2D lat/lon arrays for Basemap
     lon2d, lat2d = numpy.meshgrid(lons_cyclic, lats)
     # Transforms lat/lon into plotting coordinates for projection

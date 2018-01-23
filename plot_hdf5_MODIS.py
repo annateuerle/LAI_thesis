@@ -5,6 +5,7 @@ import gdal
 import numpy
 from matplotlib import pyplot
 import logging
+filename = 'HDF4_EOS:EOS_GRID:"MOD15A2H.A2017217.h18v03.006.2017234151733.hdf":MOD_Grid_MOD15A2H:Lai_500m'
 
 log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)
@@ -38,18 +39,19 @@ def process_modis(filename, call_back):
 
 
 def process_data(dataset):
-    """do some science!
-
-    """
 
     band = dataset.GetRasterBand(1)
+    if band is None:
+        raise ValueError('Could not read hdf file')
+
     bandtype = gdal.GetDataTypeName(band.DataType)
 
     log.debug('Data type %s', bandtype)
 
     lai = band.ReadAsArray()
-    log.debug('Size %d mb', lai.nbytes/(8*1024*1024))
+    log.debug('Bytes: %s Size %.5d kb', lai.nbytes, float(lai.nbytes) / 1024)
 
+    #scale
     passer = numpy.logical_and(lai > 0, lai <= 6)
 
     log.debug('Min: %5s Max: %5s Mean:%5.2f  STD:%5.2f' % (
@@ -57,7 +59,7 @@ def process_data(dataset):
                 lai[passer].mean(), lai[passer].std())
     )
 
-    pyplot.imshow(lai, interpolation='nearest', vmin=0, cmap=pyplot.cm.gist_earth)
+    pyplot.imshow(lai, interpolation='nearest', vmin=0, vmax=250, cmap=pyplot.cm.gist_earth)
     pyplot.colorbar()
     pyplot.show()
 
@@ -65,6 +67,4 @@ def process_data(dataset):
 
 
 if __name__ == '__main__':
-    process_modis(
-        'HDF4_EOS:EOS_GRID:"MOD15A2_A2017001_h18v03_005_2017010064736_HEGOUT.hdf":MOD_Grid_MOD15A2_927:Lai_1km',
-        process_data)
+    process_modis(filename, process_data)

@@ -2,10 +2,11 @@
 Parse and load hdf4 modis files, needs gdal 2.1.* on ubuntu
 """
 import gdal
+import glob
 import numpy
 from matplotlib import pyplot
+import matplotlib
 import logging
-filename = 'HDF4_EOS:EOS_GRID:"MOD15A2H.A2017217.h18v03.006.2017234151733.hdf":MOD_Grid_MOD15A2H:Lai_500m'
 
 log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)
@@ -51,7 +52,6 @@ def process_data(dataset):
     lai = band.ReadAsArray()
     log.debug('Bytes: %s Size %.5d kb', lai.nbytes, float(lai.nbytes) / 1024)
 
-    #scale
     passer = numpy.logical_and(lai > 0, lai <= 6)
 
     log.debug('Min: %5s Max: %5s Mean:%5.2f  STD:%5.2f' % (
@@ -59,7 +59,9 @@ def process_data(dataset):
                 lai[passer].mean(), lai[passer].std())
     )
 
-    pyplot.imshow(lai, interpolation='nearest', vmin=0, vmax=250, cmap=pyplot.cm.gist_earth)
+    # lai[lai > 7] = 7
+
+    pyplot.imshow(lai, vmin=0, vmax=26)
     pyplot.colorbar()
     pyplot.show()
 
@@ -67,4 +69,12 @@ def process_data(dataset):
 
 
 if __name__ == '__main__':
-    process_modis(filename, process_data)
+
+    hdf_files = glob.glob('/home/anna/nasa/hdf4/22978/*/*.hdf')
+    if not hdf_files:
+        raise ValueError('Directory hdf4 lai source wrong.')
+
+    for hdf_name in hdf_files:
+        process_modis(
+            f'HDF4_EOS:EOS_GRID:"{hdf_name}":MOD_Grid_MOD15A2_927:Lai_1km',
+            process_data)

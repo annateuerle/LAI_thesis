@@ -9,7 +9,7 @@ import matplotlib
 import logging
 
 log = logging.getLogger(__name__)
-log.setLevel(logging.DEBUG)
+log.setLevel(logging.ERROR)
 log.addHandler(logging.StreamHandler())
 
 
@@ -59,7 +59,7 @@ def process_data(dataset):
                 lai[passer].mean(), lai[passer].std())
     )
 
-    # lai[lai > 7] = 7
+    #lai[lai > 7] = 7
 
     pyplot.imshow(lai, vmin=0, vmax=26)
     pyplot.colorbar()
@@ -69,8 +69,8 @@ def process_data(dataset):
 
 
 if __name__ == '__main__':
-
-    hdf_files = glob.glob('/home/anna/nasa/hdf4/22978/*/*.hdf')
+    #hdf LAI directory data
+    hdf_files = glob.glob('C://Users/DPiA/Downloads/22978/*/*.hdf')
     if not hdf_files:
         raise ValueError('Directory hdf4 lai source wrong.')
 

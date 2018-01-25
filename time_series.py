@@ -13,8 +13,12 @@ log.setLevel(logging.DEBUG)
 log.addHandler(logging.StreamHandler())
 
 lai_values = []
-lai_values2 = []
-lai_values3 = []
+
+settings = {
+    # square we extract
+    'DELTA': 5
+}
+
 
 def process_modis(filename, call_back):
     dataset = gdal.Open(filename, gdal.GA_ReadOnly)
@@ -64,9 +68,19 @@ def process_data(dataset):
 
     # lai[lai > 7] = 7
     # store specific location in array.
-    lai_values.append(lai[39][442])
-    lai_values2.append(lai[42][444])
-    lai_values3.append(lai[37][440])
+
+    x = 39
+    y = 442
+    delta = settings['DELTA']
+    cell = []
+
+    for xd in range(delta):
+        for yd in range(delta):
+            value = lai[x+xd][y+yd]
+            cell.append(value)
+
+    assert len(cell) == delta*delta
+    lai_values.append(cell)
 
     #pyplot.imshow(lai, vmin=0, vmax=26)
     #pyplot.colorbar()
@@ -88,8 +102,14 @@ if __name__ == '__main__':
             process_data)
 
     time_x = range(len(lai_values))
+    delta = settings['DELTA']
+    surface = delta*delta
 
-    pyplot.plot(time_x, lai_values)
-    pyplot.plot(time_x, lai_values2)
-    pyplot.plot(time_x, lai_values3)
+    for x in range(delta*delta):
+        x_lai_values = []
+        for rectangle in lai_values:
+            x_lai_values.append(rectangle[x])
+
+        pyplot.plot(time_x, x_lai_values)
+
     pyplot.show()

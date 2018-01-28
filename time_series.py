@@ -4,6 +4,7 @@ Parse and load hdf4 modis files, needs gdal 2.1.* on ubuntu
 import gdal
 import glob
 import numpy
+import struct
 from matplotlib import pyplot
 import matplotlib
 import logging
@@ -44,6 +45,41 @@ def process_modis(filename, call_back):
         log.debug('%d %s', i+1, ds)
 
     call_back(dataset)
+
+
+def extract(lat, lon, band, geotransform):
+    """
+    Given dataset / matrix and geotransform we find
+    the nearest x,y close to the given lat lon and
+    return value's found.
+    """
+    # geotransform parameters
+    # top left x [0], w-e pixel resolution [1], rotation [2], top left y [3], rotation [4], n-s pixel resolution [5]
+    X = geotransform[0]  # top left x
+    Y = geotransform[3]  # top left y
+
+    for y in range(band.YSize):
+
+        scanline = band.ReadRaster(
+            0,             y,
+                                   band.XSize,
+                                   1,
+                                   band.XSize,
+                                   1,
+                                   band.DataType)
+
+        values = struct.unpack(fmttypes[BandType] * band.XSize, scanline)
+
+        for value in values:
+
+            if (value == 256):
+                print
+                "%.4f %.4f %.2f" % (X, Y, value)
+            X += geotransform[1]  # x pixel size
+        X = geotransform[0]
+        Y += geotransform[5]  # y pixel size
+
+    dataset = None
 
 
 def process_data(dataset):

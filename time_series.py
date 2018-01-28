@@ -17,7 +17,12 @@ lai_values = []
 
 settings = {
     # square we extract
-    'DELTA': 5
+    'DELTA': 5,
+    # somewhere in german forest.
+    'LAT': 5.3234243,
+    'LON': 53.4234,
+    'X': None,
+    'Y': None,
 }
 
 
@@ -44,45 +49,52 @@ def process_modis(filename, call_back):
     for i, ds in enumerate(dataset.GetSubDatasets()):
         log.debug('%d %s', i+1, ds)
 
-    call_back(dataset)
+    call_back(dataset, geotransform)
 
 
-def extract(lat, lon, band, geotransform):
+def determine_xy(lat, lon, band, geotransform):
     """
     Given dataset / matrix and geotransform we find
-    the nearest x,y close to the given lat lon and
-    return value's found.
+    the nearest x,y close to the given lat lon
     """
+    if settings['X']:
+        # already calculated!
+        return settings['X'], settings['Y']
+
     # geotransform parameters
     # top left x [0], w-e pixel resolution [1], rotation [2], top left y [3], rotation [4], n-s pixel resolution [5]
     X = geotransform[0]  # top left x
     Y = geotransform[3]  # top left y
 
-    for y in range(band.YSize):
-
-        scanline = band.ReadRaster(
-            0,             y,
-                                   band.XSize,
-                                   1,
-                                   band.XSize,
-                                   1,
-                                   band.DataType)
-
-        values = struct.unpack(fmttypes[BandType] * band.XSize, scanline)
-
-        for value in values:
-
-            if (value == 256):
-                print
-                "%.4f %.4f %.2f" % (X, Y, value)
-            X += geotransform[1]  # x pixel size
-        X = geotransform[0]
+    delta = 100000
+    for iy, y in enumerate(range(band.YSize)):
         Y += geotransform[5]  # y pixel size
+        ndelta = match.abs(lat - Y)
+        if ndelta < delta:
+            delta = ndelta
 
-    dataset = None
+        if ndelta > delta:
+            break
+            # found nearest latitude
+
+    delta = 1000000
+    for ix, x in enumerate(range(band.XSize)):
+        X += geotransform[1]  # x pixel size
+        ndelta = maatch.abs(lon - X)
+        if X > lon:
+            # found nearest longitude
+            break
+
+    settings['X'] = ix
+    settings['Y'] = iy
+
+    log.debug(f'{X}, {Y}, {ix}, {iy}')
+
+    # columns x,y
+    return ix, iy
 
 
-def process_data(dataset):
+def process_data(dataset, geotransform):
 
     band = dataset.GetRasterBand(1)
     if band is None:
@@ -95,6 +107,11 @@ def process_data(dataset):
     lai = band.ReadAsArray()
     log.debug('Bytes: %s Size %.5d kb', lai.nbytes, float(lai.nbytes) / 1024)
 
+    lat = settings['LAT']
+    lon = settings['LON']
+
+    x, y = determine_xy(lat, lon, band, geotransform)
+
     passer = numpy.logical_and(lai > 0, lai <= 6)
 
     log.debug('Min: %5s Max: %5s Mean:%5.2f  STD:%5.2f' % (
@@ -105,8 +122,8 @@ def process_data(dataset):
     # lai[lai > 7] = 7
     # store specific location in array.
 
-    x = 39
-    y = 442
+    #x = 39
+    #y = 442
     delta = settings['DELTA']
     cell = []
 
@@ -125,10 +142,12 @@ def process_data(dataset):
     return
 
 
-if __name__ == '__main__':
+def do_science():
     #hdf LAI directory data
     #C:\Users\DPiA\Downloads\22978
-    hdf_files = glob.glob('C://Users/DPiA/Downloads/22978/*/*.hdf')
+    hdf_dir = 'C://Users/DPiA/Downloads/22978/*/*.hdf'
+    hdf_dir = '/home/stephan/Desktop/data_uu/22978/*/*.hdf'
+    hdf_files = glob.glob(hdf_dir)
     if not hdf_files:
         raise ValueError('Directory hdf4 lai source wrong.')
 
@@ -136,6 +155,9 @@ if __name__ == '__main__':
         process_modis(
             f'HDF4_EOS:EOS_GRID:"{hdf_name}":MOD_Grid_MOD15A2_927:Lai_1km',
             process_data)
+        break
+
+    return
 
     time_x = range(len(lai_values))
     delta = settings['DELTA']
@@ -149,3 +171,7 @@ if __name__ == '__main__':
         pyplot.plot(time_x, x_lai_values)
 
     pyplot.show()
+
+
+if __name__ == '__main__':
+    do_science()

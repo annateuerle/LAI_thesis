@@ -4,7 +4,7 @@ Parse and load hdf4 modis files, needs gdal 2.1.* on ubuntu
 import gdal
 import glob
 import numpy
-import struct
+import math
 from matplotlib import pyplot
 import matplotlib
 import logging
@@ -17,10 +17,10 @@ lai_values = []
 
 settings = {
     # square we extract
-    'DELTA': 5,
+    'DELTA': 2,
     # somewhere in german forest.
-    'LAT': 5.3234243,
-    'LON': 53.4234,
+    'LON': 7.5046,  # Y
+    'LAT': 51.1156, # X
     'X': None,
     'Y': None,
 }
@@ -43,6 +43,7 @@ def process_modis(filename, call_back):
     if geotransform:
         log.info("Origin = ({}, {})".format(geotransform[0], geotransform[3]))
         log.info("Pixel Size = ({}, {})".format(geotransform[1], geotransform[5]))
+        log.info(geotransform)
 
     log.debug('Raster Count %d', dataset.RasterCount)
 
@@ -52,46 +53,21 @@ def process_modis(filename, call_back):
     call_back(dataset, geotransform)
 
 
-def determine_xy(lat, lon, band, geotransform):
+def determine_xy(band, geotransform):
     """
     Given dataset / matrix and geotransform we find
     the nearest x,y close to the given lat lon
     """
-    if settings['X']:
-        # already calculated!
-        return settings['X'], settings['Y']
-
-    # geotransform parameters
-    # top left x [0], w-e pixel resolution [1], rotation [2], top left y [3], rotation [4], n-s pixel resolution [5]
-    X = geotransform[0]  # top left x
-    Y = geotransform[3]  # top left y
-
-    delta = 100000
-    for iy, y in enumerate(range(band.YSize)):
-        Y += geotransform[5]  # y pixel size
-        ndelta = match.abs(lat - Y)
-        if ndelta < delta:
-            delta = ndelta
-
-        if ndelta > delta:
-            break
-            # found nearest latitude
-
-    delta = 1000000
-    for ix, x in enumerate(range(band.XSize)):
-        X += geotransform[1]  # x pixel size
-        ndelta = maatch.abs(lon - X)
-        if X > lon:
-            # found nearest longitude
-            break
-
-    settings['X'] = ix
-    settings['Y'] = iy
-
-    log.debug(f'{X}, {Y}, {ix}, {iy}')
-
-    # columns x,y
-    return ix, iy
+    from pyproj import Proj
+    # +proj=sinu +lon_0=0 +x_0=0 +y_0=0 +a=6371007.181 +b=6371007.181 +units=m +no_defs
+    p_modis_grid = Proj('+proj=sinu +lon_0=0 +x_0=0 +y_0=0 +a=6371007.181 +b=6371007.181 +units=m +no_defs')
+    x, y = p_modis_grid(settings['LON'], settings['LAT'])
+    # or the inverse, from x, y to lon, lat
+    #lon, lat = p_modis_grid(x, y, inverse=True)
+    log.debug(f'X:{x} Y:{y}')
+    # now correct for origin and devide by pixelsize to get x,y in data file.
+    pixelsize = 926.625433055833
+    return int(x / pixelsize), int((abs(int(y) - 6671703.118)) / pixelsize)
 
 
 def process_data(dataset, geotransform):
@@ -107,10 +83,9 @@ def process_data(dataset, geotransform):
     lai = band.ReadAsArray()
     log.debug('Bytes: %s Size %.5d kb', lai.nbytes, float(lai.nbytes) / 1024)
 
-    lat = settings['LAT']
-    lon = settings['LON']
+    x, y = determine_xy(band, geotransform)
 
-    x, y = determine_xy(lat, lon, band, geotransform)
+    log.debug(f'XY: {x}:{y}')
 
     passer = numpy.logical_and(lai > 0, lai <= 6)
 
@@ -119,25 +94,24 @@ def process_data(dataset, geotransform):
                 lai[passer].mean(), lai[passer].std())
     )
 
-    # lai[lai > 7] = 7
+    #lai[lai > 7] = 7
     # store specific location in array.
 
-    #x = 39
-    #y = 442
     delta = settings['DELTA']
     cell = []
 
     for xd in range(delta):
         for yd in range(delta):
-            value = lai[x+xd][y+yd]
+            value = lai[y+yd][x+xd]
             cell.append(value)
 
     assert len(cell) == delta*delta
     lai_values.append(cell)
 
-    #pyplot.imshow(lai, vmin=0, vmax=26)
-    #pyplot.colorbar()
-    #pyplot.show()
+    # pyplot.imshow(lai, vmin=0, vmax=26)
+    # pyplot.plot([x], [y], 'ro')
+    # pyplot.colorbar()
+    # pyplot.show()
 
     return
 
@@ -148,16 +122,15 @@ def do_science():
     hdf_dir = 'C://Users/DPiA/Downloads/22978/*/*.hdf'
     hdf_dir = '/home/stephan/Desktop/data_uu/22978/*/*.hdf'
     hdf_files = glob.glob(hdf_dir)
+    hdf_files.sort()
     if not hdf_files:
         raise ValueError('Directory hdf4 lai source wrong.')
 
     for hdf_name in hdf_files:
+        log.debug('loading %s', hdf_name)
         process_modis(
             f'HDF4_EOS:EOS_GRID:"{hdf_name}":MOD_Grid_MOD15A2_927:Lai_1km',
             process_data)
-        break
-
-    return
 
     time_x = range(len(lai_values))
     delta = settings['DELTA']

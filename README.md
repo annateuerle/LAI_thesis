@@ -7,8 +7,8 @@ Because research should be reproducible I publish source code of my thesis here.
 Thesis
 ======
 
-netcdf.py
----------
+plot_basemap_climatic_variable_CRU.py
+--------------------------
 
 The code does two things. First, it plots time series of climatic variable for a specific location. Secondly the same climatic variable at the global map scale. It works with monthly time series.
 
@@ -20,3 +20,4 @@ endyear: end year of your data
 nc_variable: shortcut for the climatic variable (pre/vap/tmp/pet)
 
 run
+-----------------------------

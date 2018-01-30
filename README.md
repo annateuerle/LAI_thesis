@@ -19,7 +19,6 @@ You have to fill in three variables:
 2. endyear: end year of your data
 3. nc_variable: shortcut for the climatic variable (pre/vap/tmp/pet)
 
-run
 -----------------------------
 
 time_series.py
@@ -31,3 +30,10 @@ You have to fill in three variables:
 1. directory of the folder with LAI data (hdf4 files)
 2. LAT and LON of the location
 3. For hdf modis files to convert lat,lon to x,y in the 1200x1200 grid the origin coordinates of the measurement, we need to provide pixel size, correct projection. The pixelsize and projection is probably already correct but the origin needs to be specified for each file.
+
+---------------------------
+
+plot_hdf5_MODIS.py
+---------------------------
+
+The code makes a map of the LAI for the specific tile.

@@ -4,6 +4,7 @@ Parse and load hdf4 modis files, needs gdal 2.1.* on ubuntu
 import gdal
 import glob
 import numpy
+import dateparser
 import math
 from matplotlib import pyplot
 import matplotlib
@@ -17,10 +18,10 @@ lai_values = []
 
 settings = {
     # square we extract
-    'DELTA': 2,
-    # somewhere in german forest.
-    'LON': 7.5046,  # Y
-    'LAT': 51.1156, # X
+    'DELTA': 1,
+    # longnitude and latitude of the location.
+    'LON': 102.500,  # Y
+    'LAT': 4.819, # X
     'X': None,
     'Y': None,
 }
@@ -67,12 +68,15 @@ def determine_xy(band, geotransform):
     log.debug(f'X:{x} Y:{y}')
     # now correct for origin and devide by pixelsize to get x,y in data file.
     pixelsize = 926.625433055833
-    return int(x / pixelsize), int((abs(int(y) - 6671703.118)) / pixelsize)
+    return int(abs((int(x)- 11119505.196667) / pixelsize)), int((abs(int(y) - 1111950.519667)) / pixelsize)
 
 
 def process_data(dataset, geotransform):
 
     band = dataset.GetRasterBand(1)
+
+    metadata = dataset.GetMetadata_Dict()
+
     if band is None:
         raise ValueError('Could not read hdf file')
 
@@ -87,12 +91,12 @@ def process_data(dataset, geotransform):
 
     log.debug(f'XY: {x}:{y}')
 
-    passer = numpy.logical_and(lai > 0, lai <= 6)
+    #passer = numpy.logical_and(lai > 0, lai <= 6)
 
-    log.debug('Min: %5s Max: %5s Mean:%5.2f  STD:%5.2f' % (
-                lai[passer].min(), lai[passer].max(),
-                lai[passer].mean(), lai[passer].std())
-    )
+    #log.debug('Min: %5s Max: %5s Mean:%5.2f  STD:%5.2f' % (
+    #            lai[passer].min(), lai[passer].max(),
+    #            lai[passer].mean(), lai[passer].std())
+    #)
 
     #lai[lai > 7] = 7
     # store specific location in array.
@@ -106,7 +110,9 @@ def process_data(dataset, geotransform):
             cell.append(value)
 
     assert len(cell) == delta*delta
-    lai_values.append(cell)
+    measurement_time = dateparser.parse(metadata['RANGEBEGINNINGDATE'])
+    # print(measurement_time)
+    lai_values.append((measurement_time, cell))
 
     # pyplot.imshow(lai, vmin=0, vmax=26)
     # pyplot.plot([x], [y], 'ro')
@@ -117,31 +123,36 @@ def process_data(dataset, geotransform):
 
 
 def do_science():
-    #hdf LAI directory data
-    #C:\Users\DPiA\Downloads\22978
-    hdf_dir = 'C://Users/DPiA/Downloads/22978/*/*.hdf'
-    hdf_dir = '/home/stephan/Desktop/data_uu/22978/*/*.hdf'
+    # hdf LAI directory data
+    #hdf_dir = '/home/stephan/Desktop/data_uu/22978/*/*.hdf'
+    hdf_dir = 'D:/LAI_thesis/Mala_2001_2010/*.hdf'
     hdf_files = glob.glob(hdf_dir)
-    hdf_files.sort()
+    #hdf_files.sort()
     if not hdf_files:
         raise ValueError('Directory hdf4 lai source wrong.')
 
     for hdf_name in hdf_files:
         log.debug('loading %s', hdf_name)
         process_modis(
-            f'HDF4_EOS:EOS_GRID:"{hdf_name}":MOD_Grid_MOD15A2_927:Lai_1km',
+            f'HDF4_EOS:EOS_GRID:"{hdf_name}":MOD_Grid_MOD15A2:Lai_1km',
             process_data)
 
-    time_x = range(len(lai_values))
     delta = settings['DELTA']
     surface = delta*delta
 
+    lai_values.sort()
+
     for x in range(delta*delta):
         x_lai_values = []
-        for rectangle in lai_values:
+        time_x = []
+        for m_date, rectangle in lai_values:
             x_lai_values.append(rectangle[x])
+            time_x.append(m_date)
+            log.error('%s %s', m_date, hdf_name)
 
         pyplot.plot(time_x, x_lai_values)
+        pyplot.title("LAI for 2001-2010")
+        pyplot.show()
 
     pyplot.show()
 

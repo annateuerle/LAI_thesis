@@ -11,7 +11,7 @@ from mpl_toolkits.basemap import Basemap, addcyclic, shiftgrid
 
 startyear = 2001 # put in the start year of dataset
 endyear = 2010 # put in the end year of dataset
-nc_var = 'pre' # put in the climate variable of dataset
+nc_var = 'tmp' # put in the climate variable of dataset
 
 nc = netcdf(f'cru_ts3.24.01.{startyear}.{endyear}.{nc_var}.dat.nc','r')
 
@@ -145,11 +145,16 @@ def draw_plot(time_idx):
     :return:
     """
 
-    amsterdam = {'name': 'Amsterdam, Netherlands', 'lat': 52.37, 'lon': 4.89}
+    location = {
+        'name': 'Location',
+        'lon': 102.500,  # Y
+        'lat': 4.819,  # X
+        #'lat': 52.37, 'lon': 4.89
+    }
 
     # Find the nearest latitude and longitude
-    lat_idx = numpy.abs(lats - amsterdam['lat']).argmin()
-    lon_idx = numpy.abs(lons - amsterdam['lon']).argmin()
+    lat_idx = numpy.abs(lats - location['lat']).argmin()
+    lon_idx = numpy.abs(lons - location['lon']).argmin()
 
     # A plot
     #fig = pyplot.figure()

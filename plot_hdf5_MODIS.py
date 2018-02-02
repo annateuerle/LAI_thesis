@@ -9,7 +9,7 @@ import matplotlib
 import logging
 
 log = logging.getLogger(__name__)
-log.setLevel(logging.ERROR)
+log.setLevel(logging.DEBUG)
 log.addHandler(logging.StreamHandler())
 
 
@@ -52,16 +52,18 @@ def process_data(dataset):
     lai = band.ReadAsArray()
     log.debug('Bytes: %s Size %.5d kb', lai.nbytes, float(lai.nbytes) / 1024)
 
-    passer = numpy.logical_and(lai > 0, lai <= 6)
+    passer = numpy.logical_and(lai > 0, lai <= 100)
 
     log.debug('Min: %5s Max: %5s Mean:%5.2f  STD:%5.2f' % (
                 lai[passer].min(), lai[passer].max(),
                 lai[passer].mean(), lai[passer].std())
     )
 
+    new_m = numpy.divide(lai, 10)
+
     #lai[lai > 7] = 7
 
-    pyplot.imshow(lai, vmin=0, vmax=26)
+    pyplot.imshow(new_m, vmin=0, vmax=10)
     pyplot.colorbar()
     pyplot.show()
 
@@ -70,11 +72,13 @@ def process_data(dataset):
 
 if __name__ == '__main__':
     #hdf LAI directory data
-    hdf_files = glob.glob('C://Users/DPiA/Downloads/22978/*/*.hdf')
+    hdf_files = glob.glob('D:/LAI_thesis/*.hdf')
     if not hdf_files:
         raise ValueError('Directory hdf4 lai source wrong.')
 
     for hdf_name in hdf_files:
         process_modis(
-            f'HDF4_EOS:EOS_GRID:"{hdf_name}":MOD_Grid_MOD15A2_927:Lai_1km',
+            #hdf_name,
+            f'HDF4_EOS:EOS_GRID:"{hdf_name}":MOD_Grid_MOD15A2H:Lai_500m',
+            #f'HDF4_EOS:EOS_GRID:"{hdf_name}":MOD_Grid_MOD15A2:Lai_1km',
             process_data)

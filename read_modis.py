@@ -31,7 +31,7 @@ def process(filename, call_back):
     inSRS_converter = osr.SpatialReference()  # makes an empty spatial ref object
     inSRS_converter.ImportFromWkt(inSRS)  # populates the spatial ref object with our WKT SRS
     projection = inSRS_converter.ExportToProj4()  # Exports an SRS ref as a Proj4 string usable by PyProj
-    print(projection)
+    # print(projection)
 
     if geotransform:
         log.info("Origin = ({}, {})".format(geotransform[0], geotransform[3]))

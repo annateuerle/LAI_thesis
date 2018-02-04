@@ -13,6 +13,8 @@ import h5py
 import numpy as np
 import datetime
 
+from settings import settings
+
 data_matrix = np.random.uniform(-1, 1, size=(10, 3))
 
 log = logging.getLogger(__name__)
@@ -20,19 +22,6 @@ log.setLevel(logging.DEBUG)
 log.addHandler(logging.StreamHandler())
 
 lai_values = []
-
-settings = {
-    # square we extract
-    'DELTA': 2,
-    # longnitude and latitude of the location.
-    'LON': 7.504,  # Y
-    'LAT': 51.115, # X
-    'hdf_dir':'D:/LAI_thesis/MODIS_NL_2001_2010/*.hdf',
-    'groupname': "LAI_german_forest_monthX",
-    'hdf5storage': 'lai_cru.hdf5',
-    'X': None,
-    'Y': None,
-}
 
 
 def process_data(dataset, geotransform, projection):
@@ -46,15 +35,15 @@ def process_data(dataset, geotransform, projection):
 
     bandtype = gdal.GetDataTypeName(band.DataType)
 
-    log.debug('Data type %s', bandtype)
+    # log.debug('Data type %s', bandtype)
 
     lai = band.ReadAsArray()
-    log.debug('Bytes: %s Size %.5d kb', lai.nbytes, float(lai.nbytes) / 1024)
+    # log.debug('Bytes: %s Size %.5d kb', lai.nbytes, float(lai.nbytes) / 1024)
 
     x, y = read_modis.determine_xy(
         band, geotransform, projection, settings['LON'], settings['LAT'])
 
-    log.debug(f'XY: {x}:{y}')
+    #log.debug(f'XY: {x}:{y}')
 
     #passer = numpy.logical_and(lai > 0, lai <= 6)
 
@@ -76,7 +65,6 @@ def process_data(dataset, geotransform, projection):
 
     assert len(cell) == delta*delta
     measurement_time = dateparser.parse(metadata['RANGEBEGINNINGDATE'])
-    # print(measurement_time)
     lai_values.append((measurement_time, cell))
 
     #pyplot.imshow(lai, vmin=0, vmax=26)
@@ -93,11 +81,11 @@ def do_science():
 
     hdf_dir = settings['hdf_dir']
     hdf_files = glob.glob(hdf_dir)
-    #hdf_files.sort()
+    # hdf_files.sort()
     if not hdf_files:
         raise ValueError('Directory hdf4 lai source wrong.')
 
-    for hdf_name in hdf_files[:18]:
+    for hdf_name in hdf_files:
         log.debug('loading %s', hdf_name)
         read_modis.process(
             f'HDF4_EOS:EOS_GRID:"{hdf_name}":MOD_Grid_MOD15A2:Lai_1km',
@@ -126,21 +114,26 @@ def save_lai_location(lai_array):
     """
 
     storage_name = settings['hdf5storage']
-    data_file = h5py.File(storage_name, 'a')
 
     lai_matrix = np.array(
         [cell for time, cell in lai_array]
     )
 
-    time_matrix = np.array(
-        [time.timestamp() for time, cell in lai_array]
-    )
+    time_matrix = [time.timestamp() for time, cell in lai_array]
 
     groupname = settings['groupname']
 
-    data_file.create_dataset(groupname, data=lai_matrix)
-    data_file.create_dataset('timestamps', data=time_matrix)
-    data_file.close()
+    def set_dataset(hdf, groupname, data):
+        """replace of set data in groupname of hdf file"""
+        if groupname in hdf.keys():
+            del hdf[groupname]
+        hdf.create_dataset(groupname, data=data)
+
+    with h5py.File(storage_name, "a") as data_file:
+        set_dataset(data_file, groupname, lai_matrix)
+        set_dataset(data_file, 'timestamps', time_matrix)
+        # del data_file['LAI_german_forest_monthX']
+
     log.debug(f'Saved LAI {groupname}')
 
 

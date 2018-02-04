@@ -23,14 +23,14 @@ settings = {
     # longnitude and latitude of the location.
     'LON': 7.504,  # Y
     'LAT': 51.115, # X
-    'net_dir':'D:/LAI_thesis/*.hdf',
+    # 'net_dir':'D:/LAI_thesis/*.hdf',
     'groupname': "CRU_german_forest",
     'hdf5storage': 'lai_cru.hdf5',
     'X': None,
     'Y': None,
     'startyear': 2001,
     'endyear': 2010,
-    'ncvar': 'tmp',
+    'ncvar': 'pet',
     'time_idx': 42  # some random month counting from the startyear
 }
 
@@ -207,10 +207,12 @@ def save_lai_location():
     print(nc_matrix)
 
     groupname = f"{settings['groupname']}-{settings['ncvar']}"
+    if groupname in data_file.keys():
+        del data_file[groupname]
+        log.debug('deleted %s', groupname)
     data_file.create_dataset(groupname, data=nc_matrix)
     data_file.close()
     log.debug(f'Saved CRU {groupname}')
-
 
 
 dt_time = fix_time()

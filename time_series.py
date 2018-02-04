@@ -3,12 +3,17 @@ Parse and load hdf4 modis files, needs gdal 2.1.* on ubuntu
 """
 import gdal
 import glob
-import numpy
 import dateparser
 import math
 from matplotlib import pyplot
 import matplotlib
 import logging
+import read_modis
+import h5py
+import numpy as np
+import datetime
+
+data_matrix = np.random.uniform(-1, 1, size=(10, 3))
 
 log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)
@@ -18,60 +23,19 @@ lai_values = []
 
 settings = {
     # square we extract
-    'DELTA': 1,
+    'DELTA': 2,
     # longnitude and latitude of the location.
-    'LON': 102.500,  # Y
-    'LAT': 4.819, # X
+    'LON': 7.504,  # Y
+    'LAT': 51.115, # X
+    'hdf_dir':'D:/LAI_thesis/MODIS_NL_2001_2010/*.hdf',
+    'groupname': "LAI_german_forest_monthX",
+    'hdf5storage': 'lai_cru.hdf5',
     'X': None,
     'Y': None,
 }
 
 
-def process_modis(filename, call_back):
-    dataset = gdal.Open(filename, gdal.GA_ReadOnly)
-    log.info("Driver: {}/{}".format(
-        dataset.GetDriver().ShortName,
-        dataset.GetDriver().LongName))
-    log.info("Size is {} x {} x {}".format(
-        dataset.RasterXSize,
-        dataset.RasterYSize,
-        dataset.RasterCount))
-
-    log.info("Projection is {}".format(dataset.GetProjection()))
-
-    geotransform = dataset.GetGeoTransform()
-
-    if geotransform:
-        log.info("Origin = ({}, {})".format(geotransform[0], geotransform[3]))
-        log.info("Pixel Size = ({}, {})".format(geotransform[1], geotransform[5]))
-        log.info(geotransform)
-
-    log.debug('Raster Count %d', dataset.RasterCount)
-
-    for i, ds in enumerate(dataset.GetSubDatasets()):
-        log.debug('%d %s', i+1, ds)
-
-    call_back(dataset, geotransform)
-
-
-def determine_xy(band, geotransform):
-    """
-    Given dataset / matrix and geotransform we find
-    the nearest x,y close to the given lat lon
-    """
-    from pyproj import Proj
-    # +proj=sinu +lon_0=0 +x_0=0 +y_0=0 +a=6371007.181 +b=6371007.181 +units=m +no_defs
-    p_modis_grid = Proj('+proj=sinu +lon_0=0 +x_0=0 +y_0=0 +a=6371007.181 +b=6371007.181 +units=m +no_defs')
-    x, y = p_modis_grid(settings['LON'], settings['LAT'])
-    # or the inverse, from x, y to lon, lat
-    #lon, lat = p_modis_grid(x, y, inverse=True)
-    log.debug(f'X:{x} Y:{y}')
-    # now correct for origin and devide by pixelsize to get x,y in data file.
-    pixelsize = 926.625433055833
-    return int(abs((int(x)- 11119505.196667) / pixelsize)), int((abs(int(y) - 1111950.519667)) / pixelsize)
-
-
-def process_data(dataset, geotransform):
+def process_data(dataset, geotransform, projection):
 
     band = dataset.GetRasterBand(1)
 
@@ -87,7 +51,8 @@ def process_data(dataset, geotransform):
     lai = band.ReadAsArray()
     log.debug('Bytes: %s Size %.5d kb', lai.nbytes, float(lai.nbytes) / 1024)
 
-    x, y = determine_xy(band, geotransform)
+    x, y = read_modis.determine_xy(
+        band, geotransform, projection, settings['LON'], settings['LAT'])
 
     log.debug(f'XY: {x}:{y}')
 
@@ -106,7 +71,7 @@ def process_data(dataset, geotransform):
 
     for xd in range(delta):
         for yd in range(delta):
-            value = lai[y+yd][x+xd]
+            value = lai[y+yd][x+xd] / 10
             cell.append(value)
 
     assert len(cell) == delta*delta
@@ -114,10 +79,10 @@ def process_data(dataset, geotransform):
     # print(measurement_time)
     lai_values.append((measurement_time, cell))
 
-    # pyplot.imshow(lai, vmin=0, vmax=26)
-    # pyplot.plot([x], [y], 'ro')
-    # pyplot.colorbar()
-    # pyplot.show()
+    #pyplot.imshow(lai, vmin=0, vmax=26)
+    #pyplot.plot([x], [y], 'ro')
+    #pyplot.colorbar()
+    #pyplot.show()
 
     return
 
@@ -125,15 +90,16 @@ def process_data(dataset, geotransform):
 def do_science():
     # hdf LAI directory data
     #hdf_dir = '/home/stephan/Desktop/data_uu/22978/*/*.hdf'
-    hdf_dir = 'D:/LAI_thesis/Mala_2001_2010/*.hdf'
+
+    hdf_dir = settings['hdf_dir']
     hdf_files = glob.glob(hdf_dir)
     #hdf_files.sort()
     if not hdf_files:
         raise ValueError('Directory hdf4 lai source wrong.')
 
-    for hdf_name in hdf_files:
+    for hdf_name in hdf_files[:18]:
         log.debug('loading %s', hdf_name)
-        process_modis(
+        read_modis.process(
             f'HDF4_EOS:EOS_GRID:"{hdf_name}":MOD_Grid_MOD15A2:Lai_1km',
             process_data)
 
@@ -150,12 +116,119 @@ def do_science():
             time_x.append(m_date)
             log.error('%s %s', m_date, hdf_name)
 
-        pyplot.plot(time_x, x_lai_values)
-        pyplot.title("LAI for 2001-2010")
-        pyplot.show()
+    #pyplot.plot(time_x, x_lai_values)
+    #pyplot.title("LAI for 2001-2010")
+    #pyplot.show()
 
+
+def save_lai_location(lai_array):
+    """ Write data to HDF5
+    """
+
+    storage_name = settings['hdf5storage']
+    data_file = h5py.File(storage_name, 'a')
+
+    lai_matrix = np.array(
+        [cell for time, cell in lai_array]
+    )
+
+    time_matrix = np.array(
+        [time.timestamp() for time, cell in lai_array]
+    )
+
+    groupname = settings['groupname']
+
+    data_file.create_dataset(groupname, data=lai_matrix)
+    data_file.create_dataset('timestamps', data=time_matrix)
+    data_file.close()
+    log.debug(f'Saved LAI {groupname}')
+
+
+def create_lai_for_every_day(hdf_lai_values):
+    """create day values for all days."""
+    lai_for_every_day = []
+
+    for d8t, lai_value in hdf_lai_values:
+        for i in range(8):
+            day1 = datetime.timedelta(days=1)
+            oneday = d8t + i * day1
+            lai_for_every_day.append((oneday, lai_value[0]))
+
+    return lai_for_every_day
+
+
+def store_avg_month(lai_values_months, month_values, current_month):
+
+    if month_values:
+        avg_month = float(sum(month_values)) / len(month_values)
+        lai_values_months.append((current_month, avg_month))
+        log.debug("Stored Month: %s Value %f", current_month, avg_month)
+
+def convert_to_120months(hdf_lai_values: list) -> list:
+    ""
+    """"
+    Convert 8 day period to month period.
+    
+    We asume the hdf_lai_values are sorted by date.
+    """
+    lai_values_months = []
+
+    lai_for_every_day = create_lai_for_every_day(hdf_lai_values)
+
+    current_month = 0
+    month_values = []
+    year = 0
+    current_month_date = None
+
+    # create month avg values of lai
+    for day, day_value in lai_for_every_day:
+        month = day.month
+
+        if current_month is None:
+            current_month = month
+            year = day.year
+            current_month_date = datetime.datetime(year=day.year, month=day.month, day=15)
+
+        if month is not current_month:
+            store_avg_month(lai_values_months, month_values, current_month_date)
+            # reset month counting.
+            current_month = month
+            month_values = []
+            year = day.year
+            current_month_date = datetime.datetime(year=year, month=month, day=15)
+
+        # store value of one day.
+        month_values.append(day_value)
+
+    if month_values:
+        # store last month
+        current_month_date = datetime.datetime(year=year, month=current_month, day=15)
+        store_avg_month(lai_values_months, month_values, current_month_date)
+        log.debug(len(lai_values_months))
+
+    return lai_values_months
+
+def plot_month(lai_values_by_month):
+
+    x_lai_values = []
+    time_x = []
+
+    for m_date, rectangle in lai_values_by_month:
+        x_lai_values.append(rectangle)
+        time_x.append(m_date)
+        # log.error('%s %s', m_date, hdf_name)
+
+    pyplot.plot(time_x, x_lai_values)
+    pyplot.title("LAI for 2001-2010 Month")
     pyplot.show()
 
 
 if __name__ == '__main__':
     do_science()
+    lai_by_month = convert_to_120months(lai_values)
+
+    for month, value in lai_by_month:
+        log.debug('%s %f', month, value)
+
+    plot_month(lai_by_month)
+    save_lai_location(lai_by_month)

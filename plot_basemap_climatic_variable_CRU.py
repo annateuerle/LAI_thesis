@@ -1,19 +1,45 @@
 # coding: utf-8
 import datetime # Python standard library datetime  module
 import numpy
+import logging
 import netCDF4
 from netCDF4 import Dataset as netcdf
 
-import matplotlib
+import h5py
+import numpy as np
+
 from  matplotlib import pyplot
 import mpl_toolkits
 from mpl_toolkits.basemap import Basemap, addcyclic, shiftgrid
 
-startyear = 2001 # put in the start year of dataset
-endyear = 2010 # put in the end year of dataset
-nc_var = 'tmp' # put in the climate variable of dataset
+log = logging.getLogger(__name__)
+log.setLevel(logging.DEBUG)
+log.addHandler(logging.StreamHandler())
+
+
+settings = {
+    # square we extract
+    'DELTA': 1,
+    # longnitude and latitude of the location.
+    'LON': 7.504,  # Y
+    'LAT': 51.115, # X
+    'net_dir':'D:/LAI_thesis/*.hdf',
+    'groupname': "CRU_german_forest",
+    'hdf5storage': 'lai_cru.hdf5',
+    'X': None,
+    'Y': None,
+    'startyear': 2001,
+    'endyear': 2010,
+    'ncvar': 'tmp',
+    'time_idx': 42  # some random month counting from the startyear
+}
+
+startyear = settings['startyear']
+endyear = settings['endyear']
+nc_var = settings['ncvar']
 
 nc = netcdf(f'cru_ts3.24.01.{startyear}.{endyear}.{nc_var}.dat.nc','r')
+
 
 
 def ncdump(nc_fid, verb=True):
@@ -89,9 +115,12 @@ lons = nc.variables['lon'][:]
 time = nc.variables['time'][:]
 nc_ds = nc.variables[nc_var][:]
 
+# Find the nearest latitude and longitude
+lat_idx = numpy.abs(lats - settings['LAT']).argmin()
+lon_idx = numpy.abs(lons - settings['LON']).argmin()
 
-time_idx = 42  # some random month counting from the startyear
-
+settings['X'] = lat_idx
+settings['Y'] = lon_idx
 
 def fix_time():
     """
@@ -121,6 +150,7 @@ def draw_basemap():
 
     m.drawcoastlines()
     m.drawmapboundary()
+    time_idx = settings['time_idx']
     # Make the plot continuous
     ds_cyclic, lons_cyclic = addcyclic(nc_ds[time_idx, :, :], lons)
     # Shift the grid so lons go from -180 to 180 instead of 0 to 360.
@@ -145,17 +175,6 @@ def draw_plot(time_idx):
     :return:
     """
 
-    location = {
-        'name': 'Location',
-        'lon': 102.500,  # Y
-        'lat': 4.819,  # X
-        #'lat': 52.37, 'lon': 4.89
-    }
-
-    # Find the nearest latitude and longitude
-    lat_idx = numpy.abs(lats - location['lat']).argmin()
-    lon_idx = numpy.abs(lons - location['lon']).argmin()
-
     # A plot
     #fig = pyplot.figure()
     fig = pyplot.figure()
@@ -173,7 +192,29 @@ def draw_plot(time_idx):
     pyplot.show()
 
 
+def save_lai_location():
+    # Write data to HDF5
+
+    values_at_loc = nc_ds[:, settings['X'], settings['Y']]
+
+    print(len(dt_time))
+
+    storage_name = settings['hdf5storage']
+    data_file = h5py.File(storage_name, 'a')
+    nc_matrix = np.array(
+        values_at_loc
+    )
+    print(nc_matrix)
+
+    groupname = f"{settings['groupname']}-{settings['ncvar']}"
+    data_file.create_dataset(groupname, data=nc_matrix)
+    data_file.close()
+    log.debug(f'Saved CRU {groupname}')
+
+
+
 dt_time = fix_time()
 
-draw_plot(time_idx)
-draw_basemap()
+draw_plot(settings['time_idx'])
+#draw_basemap()
+save_lai_location()

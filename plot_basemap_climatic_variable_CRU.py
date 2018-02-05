@@ -16,23 +16,8 @@ log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)
 log.addHandler(logging.StreamHandler())
 
+from settings import settings
 
-settings = {
-    # square we extract
-    'DELTA': 1,
-    # longnitude and latitude of the location.
-    'LON': 7.504,  # Y
-    'LAT': 51.115, # X
-    # 'net_dir':'D:/LAI_thesis/*.hdf',
-    'groupname': "CRU_german_forest",
-    'hdf5storage': 'lai_cru.hdf5',
-    'X': None,
-    'Y': None,
-    'startyear': 2001,
-    'endyear': 2010,
-    'ncvar': 'pet',
-    'time_idx': 42  # some random month counting from the startyear
-}
 
 startyear = settings['startyear']
 endyear = settings['endyear']

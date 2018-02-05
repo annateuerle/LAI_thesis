@@ -121,7 +121,7 @@ def save_lai_location(lai_array):
 
     time_matrix = [time.timestamp() for time, cell in lai_array]
 
-    groupname = settings['groupname']
+    groupname = settings['groupname'] + '-lai'
 
     def set_dataset(hdf, groupname, data):
         """replace of set data in groupname of hdf file"""

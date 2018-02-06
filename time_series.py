@@ -121,6 +121,8 @@ def save_lai_location(lai_array):
 
     time_matrix = [time.timestamp() for time, cell in lai_array]
 
+    log.debug('X- time count %d', len(time_matrix))
+
     groupname = settings['groupname'] + '-lai'
 
     def set_dataset(hdf, groupname, data):

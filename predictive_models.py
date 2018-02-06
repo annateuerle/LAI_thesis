@@ -9,6 +9,10 @@ import datetime
 from datetime import date
 import h5py
 import sympy
+from math import sqrt
+import numpy as np
+
+
 
 from settings import settings
 
@@ -47,23 +51,19 @@ def load_data():
 
 def plot():
 
-    time_x = timestamps
+    time_x = timestamps[:120]
     y_lai_values = datasets['lai']
     y_tmp_values = datasets['tmp']
     y_pred_lai = datasets['pred_tmp']
 
 
-    lai, = pyplot.plot(time_x,  y_lai_values, label='lai')
-    pred, = pyplot.plot(time_x, y_pred_lai[:109],  label='pred')
-    tmp, = pyplot.plot(time_x,  y_tmp_values[:109], label='tmp')
+    lai, = pyplot.plot(time_x,  y_lai_values[:120], label='lai')
+    pred, = pyplot.plot(time_x, y_pred_lai[:120],  label='pred')
+    #tmp, = pyplot.plot(time_x,  y_tmp_values[:109], label='tmp')
 
     pyplot.title("LAI for 2001-2010 Month")
-    # Create a legend for the first line.
-    #plt.legend(handles=lai, loc=1)
-    # Create another legend for the second line.
-    #plt.legend(handles=tmp, loc=4)
 
-    plt.legend(handles=[tmp, pred], loc=2)
+    plt.legend(handles=[pred, lai], loc=2)
 
     pyplot.show()
 
@@ -74,9 +74,23 @@ def make_prediction():
 
 def lai_pred_tmp(tmp):
 
-    return 0.2 * tmp - 2
+    return 0.1 * tmp + 0.5
+
+def calc_rmse(predictions, targets):
+
+    if type(predictions) == list:
+        predictions = np.array(predictions)
+        targets = np.array(targets)
+
+    differences = predictions - targets                       #the DIFFERENCEs.
+    differences_squared = differences ** 2                    #the SQUAREs of ^
+    mean_of_differences_squared = differences_squared.mean()  #the MEAN of ^
+    rmse_val = np.sqrt(mean_of_differences_squared)           #ROOT of ^
+    return rmse_val  #get the ^
 
 if __name__ == '__main__':
     load_data()
     make_prediction()
     plot()
+    rmse = calc_rmse(datasets['pred_tmp'][:120], datasets['lai'][:120])
+    print('RMSE is:', rmse)

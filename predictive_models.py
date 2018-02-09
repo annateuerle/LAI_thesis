@@ -2,9 +2,8 @@ import time_series
 import logging
 import glob
 import read_modis
-from matplotlib import pyplot
 import matplotlib.patches as mpatches
-import matplotlib.pyplot as plt
+from matplotlib import pyplot
 import datetime
 from datetime import date
 import h5py
@@ -56,14 +55,22 @@ def plot():
     y_tmp_values = datasets['tmp']
     y_pred_lai = datasets['pred_tmp']
 
-
     lai, = pyplot.plot(time_x,  y_lai_values[:120], label='lai')
-    pred, = pyplot.plot(time_x, y_pred_lai[:120],  label='pred')
+    pred,  = pyplot.plot(time_x, y_pred_lai[:120],  label='pred')
     #tmp, = pyplot.plot(time_x,  y_tmp_values[:109], label='tmp')
 
-    pyplot.title("LAI for 2001-2010 Month")
+    rmse = calc_rmse(datasets['pred_tmp'][:120], datasets['lai'][:120])
+    #print('RMSE is:', rmse)
 
-    plt.legend(handles=[pred, lai], loc=2)
+    pyplot.figtext(
+        0.81, 0.84, f'rmse {rmse:.3f}', fontsize=10, horizontalalignment='center',
+        verticalalignment='center', bbox=dict(facecolor='grey', alpha=0.5),
+    )
+
+    #fig = pyplot.figure()
+    pyplot.title("LAI for 2001-2010 Month")
+    #textplot = fig.add_subplot(111)
+    pyplot.legend(handles=[pred, lai], loc=2)
 
     pyplot.show()
 
@@ -92,5 +99,3 @@ if __name__ == '__main__':
     load_data()
     make_prediction()
     plot()
-    rmse = calc_rmse(datasets['pred_tmp'][:120], datasets['lai'][:120])
-    print('RMSE is:', rmse)

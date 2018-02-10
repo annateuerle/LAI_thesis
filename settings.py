@@ -5,11 +5,11 @@ settings = {
     'DELTA': 2,
 
     # longnitude and latitude of the location.
-    'LON': -94.6572,  # X
-    'LAT': 16.6515, # Y
+    'LON': -66.295,  # X
+    'LAT': -5.709000, # Y
 
-    'hdf_dir':'D:/LAI_thesis/Mexico_2001_2010/*.hdf',
-    'groupname': "mexico",
+    'hdf_dir':'D:/LAI_thesis/Amazon_2001_2010/*.hdf',
+    'groupname': "amazon",
     'hdf5storage': 'lai_cru.hdf5',
     'X': None,
     'Y': None,
@@ -17,6 +17,9 @@ settings = {
     'startyear': 2001,
     'endyear': 2010,
     'ncvar': 'vap',
-    'time_idx': 42  # some random month counting from the startyear
+    'time_idx': 42,  # some random month counting from the startyear
+    #'prediction_function': lai_pred_tmp,
+    'prediction_option': 'pet',
+
 }
 

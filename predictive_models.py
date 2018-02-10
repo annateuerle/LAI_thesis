@@ -1,18 +1,10 @@
 import time_series
 import logging
-import glob
-import read_modis
-import matplotlib.patches as mpatches
+from load_datasets import load_data
+
 from matplotlib import pyplot
-import datetime
-from datetime import date
-import h5py
-import sympy
-from math import sqrt
 import numpy as np
-
-
-
+from functions_pred_lai import prediction_options
 from settings import settings
 
 
@@ -20,68 +12,57 @@ log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)
 log.addHandler(logging.StreamHandler())
 
-timsetamps = None
 
-datasets = {
-    'lai': None,
-    'tmp': None,
-    'pre': None,
-    'vap': None,
-    'pet': None,
-}
-
-
-def load_data():
-    storage_name = settings['hdf5storage']
-    with h5py.File(storage_name, "r") as data_file:
-
-        x_time = data_file['timestamps']
-
-        time_x = []
-        for t in x_time:
-            dt = date.fromtimestamp(t)
-            time_x.append(dt)
-
-        global timestamps
-        timestamps = time_x
-        groupname = settings['groupname']
-        for var in datasets.keys():
-            datasets[var] = list(data_file[f'{groupname}-{var}'])
-
-def plot():
+def plot(timestamps, datasets):
+    p_label = settings['prediction_option']
 
     time_x = timestamps[:120]
-    y_lai_values = datasets['lai']
-    y_tmp_values = datasets['tmp']
-    y_pred_lai = datasets['pred_tmp']
+    y_lai_values = datasets['lai'][:120]
+    y_tmp_values = datasets['tmp'][:120]
+    y_pre_values = datasets['pre'][:120]
+    y_vap_values = datasets['vap'][:120]
+    y_pet_values = datasets['pet'][:120]
+    y_pred_lai = datasets[f'pred_{p_label}'][:120]
 
-    lai, = pyplot.plot(time_x,  y_lai_values[:120], label='lai')
-    pred,  = pyplot.plot(time_x, y_pred_lai[:120],  label='pred')
-    #tmp, = pyplot.plot(time_x,  y_tmp_values[:109], label='tmp')
 
-    rmse = calc_rmse(datasets['pred_tmp'][:120], datasets['lai'][:120])
-    #print('RMSE is:', rmse)
+    # Three subplots sharing both x/y axes
+    f, (ax1, ax2, ax3, ax4, ax5) = pyplot.subplots(5, sharex=True, sharey=False)
+    pyplot.title(f"LAI for 2001-2010 'pred_{p_label}' Monthly",y=5.08 )
+    x = time_x
+    lai, = ax1.plot(x, y_lai_values, label='lai')
+    pred, = ax1.plot(x, y_pred_lai, color='g', label='pred')
+
+    tmp, = ax2.plot(x, y_tmp_values, color='r', label='tmp')
+    pre, = ax3.plot(x, y_pre_values, color='b', label='pre')
+    vap, = ax4.plot(x, y_vap_values, color='y', label='vap')
+    pet, = ax5.plot(x, y_pet_values, label='pet')
+    pyplot.legend(handles=[pred, lai, tmp, pre, vap, pet], loc=4)
+
+    # Fine-tune figure; make subplots close to each other and hide x ticks for
+    # all but bottom plot.
+    f.subplots_adjust(hspace=0)
+    pyplot.setp([a.get_xticklabels() for a in f.axes[:-1]], visible=False)
+
+    rmse = calc_rmse(datasets[f'pred_{p_label}'][:120], datasets['lai'][:120])
 
     pyplot.figtext(
-        0.81, 0.84, f'rmse {rmse:.3f}', fontsize=10, horizontalalignment='center',
-        verticalalignment='center', bbox=dict(facecolor='grey', alpha=0.5),
+        0.83, 0.84, f'rmse {rmse:.4f}', fontsize=10, horizontalalignment='center',
+        verticalalignment='center', bbox=dict(facecolor='white', alpha=1),
     )
 
     #fig = pyplot.figure()
-    pyplot.title("LAI for 2001-2010 Month")
     #textplot = fig.add_subplot(111)
-    pyplot.legend(handles=[pred, lai], loc=2)
-
     pyplot.show()
 
-def make_prediction():
-    ds_tmp = datasets['tmp']
-    pred_lai = [lai_pred_tmp(tmp) for tmp in ds_tmp]
-    datasets['pred_tmp'] = pred_lai
+def make_prediction(datasets):
+    label = settings['prediction_option']
+    prediction_function = prediction_options[label]
+    pred_lai = prediction_function(datasets)
+    datasets[f'pred_{label}'] = pred_lai
 
-def lai_pred_tmp(tmp):
+#def lai_pred_tmp(tmp):
 
-    return 0.1 * tmp + 0.5
+    #return 0.1 * tmp + 0.5
 
 def calc_rmse(predictions, targets):
 
@@ -96,6 +77,8 @@ def calc_rmse(predictions, targets):
     return rmse_val  #get the ^
 
 if __name__ == '__main__':
-    load_data()
-    make_prediction()
-    plot()
+    global timestamps
+    global datasets
+    timestamps, datasets = load_data()
+    make_prediction(datasets)
+    plot(timestamps, datasets)

@@ -6,7 +6,7 @@ log.setLevel(logging.DEBUG)
 log.addHandler(logging.StreamHandler())
 
 
-def lai_pred_tmp(datasets, symbols=[0.1, 0.5]):
+def lai_pred_tmp(datasets, symbols=[0.1, 2.0]):
     """
     make a prediction of lai with temperature
     :param datasets:
@@ -20,7 +20,7 @@ def lai_pred_tmp(datasets, symbols=[0.1, 0.5]):
 
     return predictions
 
-def lai_pred_pre(datasets, symbols=[0.1, 0.5]):
+def lai_pred_pre(datasets, symbols=[0.00, 4.46]):
     """
     make a prediction of lai with vapour pressure
     :param datasets:
@@ -34,7 +34,7 @@ def lai_pred_pre(datasets, symbols=[0.1, 0.5]):
 
     return predictions
 
-def lai_pred_vap(datasets, symbols=[0.1, 0.5]):
+def lai_pred_vap(datasets, symbols=[0.09, 2.0]):
     """
     make a prediction of lai with vapour pressure
     :param datasets:
@@ -48,7 +48,7 @@ def lai_pred_vap(datasets, symbols=[0.1, 0.5]):
 
     return predictions
 
-def lai_pred_pet(datasets, symbols=[0.1, 0.5]):
+def lai_pred_pet(datasets, symbols=[1.2, 1.0]):
     """
     make a prediction of lai with vapour pressure
     :param datasets:

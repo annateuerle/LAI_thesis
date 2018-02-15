@@ -6,6 +6,7 @@ from matplotlib import pyplot
 import numpy as np
 from functions_pred_lai import prediction_options
 from settings import settings
+import matplotlib.ticker as mticker
 
 
 log = logging.getLogger(__name__)
@@ -32,11 +33,25 @@ def plot(timestamps, datasets):
     lai, = ax1.plot(x, y_lai_values, label='lai')
     pred, = ax1.plot(x, y_pred_lai, color='g', label='pred')
 
-    tmp, = ax2.plot(x, y_tmp_values, color='r', label='tmp')
-    pre, = ax3.plot(x, y_pre_values, color='b', label='pre')
-    vap, = ax4.plot(x, y_vap_values, color='y', label='vap')
-    pet, = ax5.plot(x, y_pet_values, label='pet')
-    pyplot.legend(handles=[pred, lai, tmp, pre, vap, pet], loc=4)
+    ax2.set_ylabel('C')
+    tmp, = ax2.plot(x, y_tmp_values, color='r', label='T')
+    ax3.set_ylabel('mm')
+    pre, = ax3.plot(x, y_pre_values, color='b', label='P')
+    ax4.set_ylabel('hPa')
+    vap, = ax4.plot(x, y_vap_values, color='y', label='V')
+    ax5.set_ylabel('mm')
+    pet, = ax5.plot(x, y_pet_values, label='PE')
+
+    pyplot.legend(handles=[pred, lai, tmp, pre, vap, pet], bbox_to_anchor=(1.1, 1.05))
+
+    #units
+    pyplot.xlabel('Time (Months)')
+
+
+    for txt in pyplot.gca().xaxis.get_majorticklabels():
+        txt.set_rotation(90)
+
+    pyplot.tight_layout(h_pad=1.0,pad=2.6, w_pad=1.5 )
 
     # Fine-tune figure; make subplots close to each other and hide x ticks for
     # all but bottom plot.

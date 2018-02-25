@@ -8,8 +8,9 @@ settings = {
     'LON': -92.4491,  # X
     'LAT': 33.2985, # Y
 
-    'hdf_dir':'D:/LAI_thesis/USA_2001_2010/*.hdf',
-    'groupname': "mala",
+    'hdf_dir':'D:/LAI_thesis/Mala_2001_2010/*.hdf',
+    #'groupname': "mala",
+    'groupname': "mexico",
     'hdf5storage': 'lai_cru.hdf5',
     'X': None,
     'Y': None,
@@ -18,9 +19,10 @@ settings = {
     'endyear': 2010,
     'ncvar': 'tmp',
     'time_idx': 42,  # some random month counting from the startyear
-    #'prediction_function': lai_pred_tmp,
+    # 'prediction_function': lai_pred_tmp,
     # options, 'vap', 'tmp', 'pre', 'pet',
-    'prediction_option': 'pet',
+    'prediction_option': 'pre',
+    'moving_average_months': 3,
 
 }
 

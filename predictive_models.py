@@ -1,6 +1,7 @@
 import time_series
 import logging
 from load_datasets import load_data
+from load_datasets import calculate_moving_mean
 
 from matplotlib import pyplot
 import numpy as np
@@ -18,9 +19,12 @@ def plot(timestamps, datasets):
     p_label = settings['prediction_option']
 
     time_x = timestamps[:120]
+
     y_lai_values = datasets['lai'][:120]
     y_tmp_values = datasets['tmp'][:120]
+    #y_tmp_avg_values = datasets['tmp_moving_avg_3']
     y_pre_values = datasets['pre'][:120]
+    y_pre_avg_values = datasets['pre_moving_avg_3']
     y_vap_values = datasets['vap'][:120]
     y_pet_values = datasets['pet'][:120]
     y_pred_lai = datasets[f'pred_{p_label}'][:120]
@@ -31,18 +35,25 @@ def plot(timestamps, datasets):
     pyplot.title(f"LAI for 2001-2010 'pred_{p_label}' Monthly",y=5.08 )
     x = time_x
     lai, = ax1.plot(x, y_lai_values, label='lai')
-    pred, = ax1.plot(x, y_pred_lai, color='g', label='pred')
+    pred, = ax1.plot(x[8:], y_pred_lai[8:], color='g', label='pred')
 
     ax2.set_ylabel('C')
     tmp, = ax2.plot(x, y_tmp_values, color='r', label='T')
+    #tmp2, = ax2.plot(x[8:], y_tmp_avg_values[8:], color='orange', label='T2')
+
     ax3.set_ylabel('mm')
     pre, = ax3.plot(x, y_pre_values, color='b', label='P')
+    pre2, = ax3.plot(x[8:], y_pre_avg_values[8:], color='orange', label='T2')
     ax4.set_ylabel('hPa')
     vap, = ax4.plot(x, y_vap_values, color='y', label='V')
     ax5.set_ylabel('mm')
     pet, = ax5.plot(x, y_pet_values, label='PE')
 
-    pyplot.legend(handles=[pred, lai, tmp, pre, vap, pet], bbox_to_anchor=(1.1, 1.05))
+    pyplot.legend(
+        handles=[
+            pred, lai, tmp,
+            #tmp2,
+            pre, vap, pet], bbox_to_anchor=(1.1, 1.05))
 
     #units
     pyplot.xlabel('Time (Months)')
@@ -95,5 +106,6 @@ if __name__ == '__main__':
     global timestamps
     global datasets
     timestamps, datasets = load_data()
+    calculate_moving_mean()
     make_prediction(datasets)
     plot(timestamps, datasets)

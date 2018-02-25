@@ -1,6 +1,9 @@
 
 from load_datasets import load_data
+from load_datasets import calculate_moving_mean
 import logging
+import numpy
+import predictive_models
 
 from functions_pred_lai import prediction_options
 
@@ -110,7 +113,7 @@ def solver_function(datasets):
     :return:  best symbol values and rmse for prediction function in settings.
     """
 
-    # find options in symbols spcae with rmse score.
+    # find options in symbols space with rmse score.
     options = solve_big_area(datasets, constraints=[(0, 10), (0, 10)])
     # deep seearch in the best options for optimal symbol values.
     rmse, symbols = solve_options(datasets, options)
@@ -119,7 +122,64 @@ def solver_function(datasets):
     log.debug(f'RMSE lowest {rmse} for pred {pred_to_solve} symbols {symbols}')
 
 
+def calc_rmse(lai, pred_lai):
+    rmse = 0
+    # TODO handle moving average array size differences
+    for i in range(lai.size):
+        log.debug(f'{i}, lai:{lai[i]}, pred:{pred_lai[i]}')
+        rmse += (pred_lai - lai) ** 2
+
+    rmse = (rmse.mean()) ** 0.5
+    # Done!
+    print(rmse)
+
+
+
+def solver_function_v2(datasets):
+    """
+    Fit a line, y = mx + c, through some noisy data-points
+
+    :param datasets:
+    :return:  best symbol values and rmse for prediction function in settings.
+    """
+    ds_var = settings['prediction_option']
+    source = ds_var
+    x_months = 0  # when using moving avg start point is moved.
+
+    if settings.get('moving_average_months'):
+        x_months = settings.get('moving_average_months')
+        source = f'{ds_var}_moving_avg_{x_months}'
+
+    x1 = datasets[source]
+    x = numpy.array(x1[x_months:])
+    x_all = numpy.array(x1)
+
+    y1 = datasets['lai']
+    y = numpy.array(y1[x_months:])
+    y_all = numpy.array(y1)
+
+    # We can rewrite the line equation as y = Ap, where A = [[x 1]] and p = [[m], [c]].
+    # Now use lstsq to solve for p:
+    A = numpy.vstack([x, numpy.ones(len(x))]).T  # [[x 1]]
+
+    lin_answer = numpy.linalg.lstsq(A, y, rcond=None)
+    m, c = lin_answer[0]
+
+    log.info(f'm {m}, c: {c}')
+
+    y_pred = c + m * x_all
+
+    calc_rmse(y, y_pred[x_months:])
+
+    datasets[f'pred_{ds_var}'] = y_pred
+
+    predictive_models.plot(timestamps, datasets)
+
+
 if __name__ == '__main__':
     # load hdf5 measurement data.
     timestamps, datasets = load_data()
-    solver_function(datasets)
+    calculate_moving_mean()
+
+    #solver_function(datasets)
+    solver_function_v2(datasets)

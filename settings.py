@@ -10,7 +10,8 @@ settings = {
 
     'hdf_dir':'D:/LAI_thesis/Mala_2001_2010/*.hdf',
     #'groupname': "mala",
-    'groupname': "mexico",
+    #'groupname': "usa",
+    'groupname': "mala",
     'hdf5storage': 'lai_cru.hdf5',
     'X': None,
     'Y': None,
@@ -21,7 +22,7 @@ settings = {
     'time_idx': 42,  # some random month counting from the startyear
     # 'prediction_function': lai_pred_tmp,
     # options, 'vap', 'tmp', 'pre', 'pet',
-    'prediction_option': 'pre',
+    'prediction_option': 'all',
     'moving_average_months': 3,
 
 }

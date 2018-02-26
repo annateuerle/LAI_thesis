@@ -22,11 +22,13 @@ def plot(timestamps, datasets):
 
     y_lai_values = datasets['lai'][:120]
     y_tmp_values = datasets['tmp'][:120]
-    #y_tmp_avg_values = datasets['tmp_moving_avg_3']
+    #y_tmp_avg_values = datasets['tmp_moving_avg_4']
     y_pre_values = datasets['pre'][:120]
-    y_pre_avg_values = datasets['pre_moving_avg_3']
+    #y_pre_avg_values = datasets['pre_moving_avg_5']
     y_vap_values = datasets['vap'][:120]
+    #y_vap_avg_values = datasets['vap_moving_avg_3']
     y_pet_values = datasets['pet'][:120]
+    #y_pet_avg_values = datasets['pet_moving_avg_3']
     y_pred_lai = datasets[f'pred_{p_label}'][:120]
 
 
@@ -40,14 +42,15 @@ def plot(timestamps, datasets):
     ax2.set_ylabel('C')
     tmp, = ax2.plot(x, y_tmp_values, color='r', label='T')
     #tmp2, = ax2.plot(x[8:], y_tmp_avg_values[8:], color='orange', label='T2')
-
     ax3.set_ylabel('mm')
     pre, = ax3.plot(x, y_pre_values, color='b', label='P')
-    pre2, = ax3.plot(x[8:], y_pre_avg_values[8:], color='orange', label='T2')
+    #pre2, = ax3.plot(x[8:], y_pre_avg_values[8:], color='orange', label='T2')
     ax4.set_ylabel('hPa')
     vap, = ax4.plot(x, y_vap_values, color='y', label='V')
+    #vap2, = ax4.plot(x[8:], y_vap_avg_values[8:], color='orange', label='T2')
     ax5.set_ylabel('mm')
     pet, = ax5.plot(x, y_pet_values, label='PE')
+    #pet2, = ax5.plot(x[8:], y_pet_avg_values[8:], color='orange', label='T2')
 
     pyplot.legend(
         handles=[

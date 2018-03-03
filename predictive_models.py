@@ -8,7 +8,7 @@ import numpy as np
 from functions_pred_lai import prediction_options
 from settings import settings
 import matplotlib.ticker as mticker
-
+import load_datasets
 
 log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)
@@ -21,6 +21,7 @@ def plot(timestamps, datasets):
     time_x = timestamps[:120]
 
     y_lai_values = datasets['lai'][:120]
+    f_y_lai_values = load_datasets.savitzky_golay(y_lai_values, 5, 2)
     y_tmp_values = datasets['tmp'][:120]
     #y_tmp_avg_values = datasets['tmp_moving_avg_4']
     y_pre_values = datasets['pre'][:120]
@@ -37,6 +38,7 @@ def plot(timestamps, datasets):
     pyplot.title(f"LAI for 2001-2010 'pred_{p_label}' Monthly",y=5.08 )
     x = time_x
     lai, = ax1.plot(x, y_lai_values, label='lai')
+    laif, = ax1.plot(x, f_y_lai_values, label='f-lai')
     pred, = ax1.plot(x[8:], y_pred_lai[8:], color='g', label='pred')
 
     ax2.set_ylabel('C')
@@ -54,7 +56,10 @@ def plot(timestamps, datasets):
 
     pyplot.legend(
         handles=[
-            pred, lai, tmp,
+            pred,
+            lai,
+            laif,
+            tmp,
             #tmp2,
             pre, vap, pet], bbox_to_anchor=(1.1, 1.05))
 
@@ -109,6 +114,6 @@ if __name__ == '__main__':
     global timestamps
     global datasets
     timestamps, datasets = load_data()
-    calculate_moving_mean()
+    # calculate_moving_mean()
     make_prediction(datasets)
     plot(timestamps, datasets)

@@ -2,7 +2,7 @@ from matplotlib.backend_bases import LocationEvent
 
 settings = {
     # squares we extract
-    'DELTA': 2,
+    'DELTA': 1,
 
     # longnitude and latitude of the location.
     'LON': -92.4491,  # X
@@ -11,7 +11,7 @@ settings = {
     'hdf_dir':'D:/LAI_thesis/Mala_2001_2010/*.hdf',
     #'groupname': "mala",
     #'groupname': "usa",
-    'groupname': "mala",
+    'groupname': "german_forest",
     'hdf5storage': 'lai_cru.hdf5',
     'X': None,
     'Y': None,
@@ -22,8 +22,8 @@ settings = {
     'time_idx': 42,  # some random month counting from the startyear
     # 'prediction_function': lai_pred_tmp,
     # options, 'vap', 'tmp', 'pre', 'pet',
-    'prediction_option': 'all',
-    'moving_average_months': 3,
+    'prediction_option': 'tmp',
+    'moving_average_months': 0,
 
 }
 

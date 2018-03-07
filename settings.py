@@ -11,6 +11,7 @@ settings = {
     'hdf_dir':'D:/LAI_thesis/Mala_2001_2010/*.hdf',
     #'groupname': "mala",
     #'groupname': "usa",
+    #'groupname': "amazon",
     'groupname': "german_forest",
     'hdf5storage': 'lai_cru.hdf5',
     'X': None,
@@ -23,6 +24,7 @@ settings = {
     # 'prediction_function': lai_pred_tmp,
     # options, 'vap', 'tmp', 'pre', 'pet',
     'prediction_option': 'tmp',
+    'normalize': True,
     'moving_average_months': 0,
 
 }

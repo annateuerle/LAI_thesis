@@ -1,5 +1,6 @@
 from settings import settings
 import h5py
+import numpy
 import logging
 from datetime import date
 
@@ -32,8 +33,12 @@ def load_data():
         global timestamps
         timestamps = time_x[:120]
         groupname = settings['groupname']
-        for var in datasets.keys():
-            datasets[var] = list(data_file[f'{groupname}-{var}'])[:120]
+        for ds_name in datasets.keys():
+            data = list(data_file[f'{groupname}-{ds_name}'])[:120]
+            if settings.get('normalize') and ds_name != 'lai':
+                log.error("Normalizing %s", ds_name)
+                data = normalized_dataset(data)
+            datasets[ds_name] = data
 
     return timestamps, datasets
 
@@ -73,6 +78,20 @@ def calculate_moving_mean():
     #pyplot.plot(timestamps[8:], moving_average_result[8:], 'b', timestamps, datasets[ds_var], 'g')
     #pyplot.show()
 
+
+def normalized_dataset(source_data):
+    """
+    Apply  Z(x(i))= {x(i)-avg(x)}/sd(x) to given dataset.
+    """
+    source_data = numpy.array(source_data)
+    avg = numpy.mean(source_data)
+    std = numpy.std(source_data)
+    # standardeviation
+    mean = numpy.mean
+    std = numpy.std
+    arr = source_data
+    normalized_data = (arr - mean(arr, axis=0)) / std(arr, axis=0)
+    return normalized_data
 
 def savitzky_golay(y, window_size, order, deriv=0, rate=1):
     """Smooth (and optionally differentiate) data with a Savitzky-Golay filter.

@@ -9,6 +9,7 @@ def plot_filter(timestamps, datasets):
     time_x = timestamps[:120]
 
     y_lai_values = datasets['lai'][:120]
+    #width and the polynomial in the filter
     f_y_lai_values1 = load_datasets.savitzky_golay(y_lai_values, 9, 4)
     #f_y_lai_values2 = load_datasets.savitzky_golay(y_lai_values, 7, 2)
 

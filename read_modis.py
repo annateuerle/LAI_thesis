@@ -10,7 +10,7 @@ import gdal
 #inSRS_forPyProj = inSRS_converter.ExportToProj4()  # Exports an SRS ref as a Proj4 string usable by PyProj
 
 log = logging.getLogger(__name__)
-log.setLevel(logging.ERROR)
+log.setLevel(logging.DEBUG)
 log.addHandler(logging.StreamHandler())
 
 

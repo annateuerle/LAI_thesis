@@ -3,11 +3,6 @@ import logging
 
 import osr
 import gdal
-#inDS = gdal.open(r'c:\somedirectory\myRaster.tif')
-#inSRS_wkt = inDS.GetProjection()  # gives SRS in WKT
-#inSRS_converter = osr.SpatialReference()  # makes an empty spatial ref object
-#inSRS_converter.ImportFromWkt(inSRS)  # populates the spatial ref object with our WKT SRS
-#inSRS_forPyProj = inSRS_converter.ExportToProj4()  # Exports an SRS ref as a Proj4 string usable by PyProj
 
 log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)

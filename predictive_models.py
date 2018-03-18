@@ -1,3 +1,10 @@
+""""
+Plot of the all datasets (cru and lai).
+Uses the predictive function below and calculates rmse.
+"""
+
+
+
 import time_series
 import logging
 from load_datasets import load_data

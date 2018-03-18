@@ -1,10 +1,12 @@
-#Script to download datasets and functions to change the datasets.
-#Functions:
-#1)load_datasets
-#2)calculate_moving_mean
-#3)normalized_datasets (the standarize equation is applied to all climatic variables and LAI,
-# to see which affects lai model the most)
-#4)savitzky_goley (filter to smooth the orginal datasets from NASA to avpid some basic errors)
+"""
+Script to download datasets and functions to change the datasets.
+Functions:
+1)load_datasets (load all datasets from dhf5 file and put timestamps)
+2)calculate_moving_mean (when in the settings is moving average defined this is calculating datasets
+3)normalized_datasets (the standarize equation is applied to all climatic variables and LAI,
+to see which affects lai model the most)
+4)savitzky_goley (filter to smooth the orginal datasets from NASA to avpid some basic errors)
+"""
 
 from settings import settings
 import h5py

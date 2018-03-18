@@ -1,5 +1,6 @@
+#Map of the dataset MODIS15A.
 """
-Parse and load hdf4 modis files, needs gdal 2.1.* on ubuntu
+Parse and load hdf4 modis files, needs gdal 2.1.* on ubuntu.
 """
 import gdal
 import glob

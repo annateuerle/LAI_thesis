@@ -1,3 +1,7 @@
+"""
+Plot to compare Svitzky-Golay filter with the original datasets.
+"""
+
 import load_datasets
 import numpy as np
 from matplotlib import pyplot

@@ -1,3 +1,7 @@
+""""
+Read modis datasets.
+"""
+
 import gdal
 import logging
 

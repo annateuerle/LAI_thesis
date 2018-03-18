@@ -1,4 +1,6 @@
-
+""""
+Description of solver functions written from the the beginning.
+"""
 from load_datasets import load_data
 from load_datasets import calculate_moving_mean
 import logging

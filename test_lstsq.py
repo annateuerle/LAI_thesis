@@ -1,3 +1,8 @@
+""""
+Description of the solver function from the numpy
+"""
+
+
 import numpy as np
 
 x = np.array([0, 1, 2, 3]*30)

@@ -1,4 +1,5 @@
-# coding: utf-8
+#Plot of the CRU dataset as a function of time 2001-2010 and a global map of some day from that period.
+
 import datetime # Python standard library datetime  module
 import numpy
 import logging
@@ -17,7 +18,6 @@ log.setLevel(logging.DEBUG)
 log.addHandler(logging.StreamHandler())
 
 from settings import settings
-
 
 startyear = settings['startyear']
 endyear = settings['endyear']
@@ -203,5 +203,5 @@ def save_lai_location():
 dt_time = fix_time()
 
 draw_plot(settings['time_idx'])
-#draw_basemap()
+draw_basemap()
 save_lai_location()

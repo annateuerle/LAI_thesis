@@ -1,6 +1,8 @@
+#Predicts the value for m and c in the shape y=mx+c where y is LAI dataset and x is cliamtic variable.
+#If in the settings is defined moving average, then it takes moving average lai.
+
 import logging
 from settings import settings
-
 
 log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)
@@ -50,6 +52,7 @@ def lai_pred_pre(datasets, symbols=[0.00, 4.46]):
     :return: list with lai predictions
     """
     ds_pre = get_dataset(datasets, 'pre')
+
     predictions = []
     for pre in ds_pre:
         prediction = symbols[0] * pre + symbols[1]

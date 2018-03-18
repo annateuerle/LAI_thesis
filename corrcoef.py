@@ -1,3 +1,5 @@
+#Calculate correlation coefficient between CRU climatic variables
+
 import logging
 from load_datasets import load_data
 import numpy

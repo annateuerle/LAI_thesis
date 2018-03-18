@@ -2,8 +2,8 @@ from matplotlib.backend_bases import LocationEvent
 
 settings = {
     # longitude and latitude of the location.
-    #'LON': -92.4491,  # X
-    #'LAT': 33.2985,   # Y
+    'LON': -92.4491,  # X
+    'LAT': 33.2985,   # Y
 
     # 'hdf_dir':'D:/LAI_thesis/Mala_2001_2010/*.hdf',
     'hdf_dir': 'D:/LAI_thesis/Mala_2001_2010/*.hdf',

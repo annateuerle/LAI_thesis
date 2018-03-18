@@ -1,3 +1,11 @@
+#Script to download datasets and functions to change the datasets.
+#Functions:
+#1)load_datasets
+#2)calculate_moving_mean
+#3)normalized_datasets (the standarize equation is applied to all climatic variables and LAI,
+# to see which affects lai model the most)
+#4)savitzky_goley (filter to smooth the orginal datasets from NASA to avpid some basic errors)
+
 from settings import settings
 import h5py
 import numpy
@@ -45,7 +53,6 @@ def load_data():
 
 def calculate_moving_mean():
     """
-
     :return: a plot.
     """
     moving_avg = []
@@ -74,14 +81,14 @@ def calculate_moving_mean():
     datasets[dataset_label] = moving_average_result
 
     #from matplotlib import pyplot
-
     #pyplot.plot(timestamps[8:], moving_average_result[8:], 'b', timestamps, datasets[ds_var], 'g')
     #pyplot.show()
 
 
 def normalized_dataset(source_data):
     """
-    Apply  Z(x(i))= {x(i)-avg(x)}/sd(x) to given dataset.
+    Apply  Z(x(i))= {x(i)-avg(x)}/sd(x) to given data set. Standardize all values to +/- Standard deviations.
+    Mean is everywhere 0.
     """
     source_data = numpy.array(source_data)
     avg = numpy.mean(source_data)

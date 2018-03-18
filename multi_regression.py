@@ -1,3 +1,5 @@
+#Script to predict LAI based on the all cliamtic variables. Fit a line, y = ax + by + cz + dq + constant
+
 from load_datasets import load_data
 from load_datasets import calculate_moving_mean
 import logging
@@ -5,7 +7,6 @@ import numpy
 import predictive_models
 
 from functions_pred_lai import prediction_options
-
 from settings import settings
 
 from predictive_models import calc_rmse

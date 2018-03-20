@@ -4,15 +4,13 @@ The file to describe all the settings used in the files.
 from matplotlib.backend_bases import LocationEvent
 
 settings = {
-    # longitude and latitude of the location
-    'LON': -92.4491,  # X
-    'LAT': 33.2985,   # Y
-
     #hdf file
     'hdf_dir': 'D:/LAI_thesis/Mala_2001_2010/*.hdf',
+    #'hdf_dir': 'D:/LAI_thesis/Amazon_2001_2010/*.hdf',
+    #'hdf_dir': 'D:/LAI_thesis/USA_2001_2010/*.hdf',
 
     #groupname of five locations
-    'groupname': "mala",
+     'groupname': "mala",
     #'groupname': "mexico",
     #'groupname': "usa",
     #'groupname': "amazon",
@@ -28,12 +26,11 @@ settings = {
     'ncvar': 'tmp',
     'time_idx': 42,  # some random month counting from the startyear (for the CRU map)
 
+    # 'prediction_function': lai_pred_tmp,
 
-    #'prediction_function': lai_pred_tmp,
-
-    #prediction options, 'vap', 'tmp', 'pre', 'pet',
-    'prediction_option': 'tmp',
-    'normalize': True,
+    #prediction options, 'vap', 'tmp', 'pre', 'pet', 'all',
+    'prediction_option': 'all',
+    'normalize': True,  # avg 0.
     'moving_average_months': 0,
 
 }

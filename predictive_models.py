@@ -5,7 +5,7 @@ Uses the predictive function below and calculates rmse.
 
 
 
-import time_series
+import prepare_data
 import logging
 from load_datasets import load_data
 from load_datasets import calculate_moving_mean
@@ -22,13 +22,14 @@ log.setLevel(logging.DEBUG)
 log.addHandler(logging.StreamHandler())
 
 
-def plot(timestamps, datasets):
-    p_label = settings['prediction_option']
+def plot(timestamps, datasets, p_label=None):
+    if not p_label:
+        p_label = settings['prediction_option']
 
     time_x = timestamps[:120]
 
     y_lai_values = datasets['lai'][:120]
-    f_y_lai_values = load_datasets.savitzky_golay(y_lai_values, 5, 2)
+    # f_y_lai_values = load_datasets.savitzky_golay(y_lai_values, 5, 2)
     y_tmp_values = datasets['tmp'][:120]
     #y_tmp_avg_values = datasets['tmp_moving_avg_4']
     y_pre_values = datasets['pre'][:120]
@@ -45,8 +46,8 @@ def plot(timestamps, datasets):
     pyplot.title(f"LAI for 2001-2010 'pred_{p_label}' Monthly",y=5.08 )
     x = time_x
     lai, = ax1.plot(x, y_lai_values, label='lai')
-    laif, = ax1.plot(x, f_y_lai_values, label='f-lai')
-    pred, = ax1.plot(x[8:], y_pred_lai[8:], color='g', label='pred')
+    # laif, = ax1.plot(x, f_y_lai_values, label='f-lai')
+    pred, = ax1.plot(x, y_pred_lai, color='g', label='pred')
 
     ax2.set_ylabel('C')
     tmp, = ax2.plot(x, y_tmp_values, color='r', label='T')
@@ -65,7 +66,7 @@ def plot(timestamps, datasets):
         handles=[
             pred,
             lai,
-            laif,
+            # laif,
             tmp,
             #tmp2,
             pre, vap, pet], bbox_to_anchor=(1.1, 1.05))

@@ -55,7 +55,8 @@ def process_data(dataset, geotransform, projection, plot_map=False):
 
     x, y = read_modis.determine_xy(band, geotransform, projection, lon, lat)
 
-    #log.debug(f'XY: {x}:{y}')
+    log.debug(f'XY: {x}:{y}')
+    log.debug(f'lat:{lat},lon:{lon}')
 
     # values are 10* real values.
     value = lai[y][x] / 10

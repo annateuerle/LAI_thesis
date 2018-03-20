@@ -148,20 +148,19 @@ def draw_basemap():
     cs = m.contourf(x, y, ds_cyclic, 20, cmap=pyplot.cm.Spectral_r)
     cbar = pyplot.colorbar(cs, orientation='horizontal', shrink=0.9)
     dot_time = dt_time[time_idx]
-    #cbar.set_label
+    # cbar.set_label
     pyplot.title(f"Global {nc_var} for {dot_time.year}.{dot_time.month}")
     pyplot.show()
 
 
 def draw_plot(time_idx):
     """
-
     :param fig:
     :return:
     """
 
     # A plot
-    #fig = pyplot.figure()
+    # fig = pyplot.figure()
     fig = pyplot.figure()
     dot_time = dt_time[time_idx]
 
@@ -178,7 +177,7 @@ def draw_plot(time_idx):
 
 
 def save_lai_location():
-    # Write data to HDF5
+    # Write CRU data to HDF5
 
     values_at_loc = nc_ds[:, settings['X'], settings['Y']]
 
@@ -192,11 +191,13 @@ def save_lai_location():
     print(nc_matrix)
 
     groupname = f"{settings['groupname']}-{settings['ncvar']}"
+
     if groupname in data_file.keys():
         del data_file[groupname]
         log.debug('deleted %s', groupname)
     data_file.create_dataset(groupname, data=nc_matrix)
     data_file.close()
+
     log.debug(f'Saved CRU {groupname}')
 
 

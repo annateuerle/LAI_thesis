@@ -45,7 +45,7 @@ def load_data():
         groupname = settings['groupname']
         for ds_name in datasets.keys():
             data = list(data_file[f'{groupname}-{ds_name}'])[:120]
-            if settings.get('normalize') and ds_name != 'lai':
+            if settings.get('normalize'):
                 log.error("Normalizing %s", ds_name)
                 data = normalized_dataset(data)
             datasets[ds_name] = data

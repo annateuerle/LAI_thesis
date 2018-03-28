@@ -53,7 +53,7 @@ def process_data(dataset, geotransform, projection, plot_map=False):
     lat = locations[settings['groupname']]['lat']
     lon = locations[settings['groupname']]['lon']
 
-    x, y = read_modis.determine_xy(band, geotransform, projection, lon, lat)
+    x, y = read_modis.determine_xy(geotransform, projection, lon, lat)
 
     log.debug(f'XY: {x}:{y}')
     log.debug(f'lat:{lat},lon:{lon}')

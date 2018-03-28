@@ -10,11 +10,11 @@ settings = {
     #'hdf_dir': 'D:/LAI_thesis/USA_2001_2010/*.hdf',
 
     #groupname of five locations
-     'groupname': "mala",
+     #'groupname': "mala",
     #'groupname': "mexico",
     #'groupname': "usa",
     #'groupname': "amazon",
-    #'groupname': "german_forest",
+    'groupname': "german_forest",
 
     'hdf5storage': 'lai_cru.hdf5',
     'X': None,

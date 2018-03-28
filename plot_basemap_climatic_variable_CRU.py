@@ -18,6 +18,7 @@ log.setLevel(logging.DEBUG)
 log.addHandler(logging.StreamHandler())
 
 from settings import settings
+from settings import locations
 
 startyear = settings['startyear']
 endyear = settings['endyear']
@@ -95,14 +96,14 @@ def ncdump(nc_fid, verb=True):
 
 nc_attrs, nc_dims, nc_vars = ncdump(nc)
 # Extract data from NetCDF file
-lats = nc.variables['lat'][:]  # extract/copy the data
+lats = nc.variables['lat'][:]   # extract/copy the data
 lons = nc.variables['lon'][:]
 time = nc.variables['time'][:]
 nc_ds = nc.variables[nc_var][:]
 
 # Find the nearest latitude and longitude
-lat_idx = numpy.abs(lats - settings['LAT']).argmin()
-lon_idx = numpy.abs(lons - settings['LON']).argmin()
+lat_idx = numpy.abs(lats - locations[settings['groupname']]['lat']).argmin()
+lon_idx = numpy.abs(lons - locations[settings['groupname']]['lon']).argmin()
 
 settings['X'] = lat_idx
 settings['Y'] = lon_idx
@@ -127,11 +128,11 @@ def draw_basemap():
     #
     fig = pyplot.figure()
 
-    fig.subplots_adjust(left=0., right=1., bottom=0., top=0.9)
+    #fig.subplots_adjust(left=0., right=1., bottom=0., top=0.9)
     # Setup the map. See http://matplotlib.org/basemap/users/mapsetup.html
     # for other projections.
     # m = Basemap(projection='moll', llcrnrlat=-90, urcrnrlat=90, llcrnrlon=0, urcrnrlon=360, resolution='c', lon_0=0)
-    m = Basemap(projection='moll', resolution='c', lon_0=0)
+    m = Basemap(projection='cyl', resolution='c', lon_0=0)
 
     m.drawcoastlines()
     m.drawmapboundary()

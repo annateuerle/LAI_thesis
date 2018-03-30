@@ -1,9 +1,9 @@
-#Map of the dataset MODIS15A.
 """
 Parse and load hdf4 modis files, needs gdal 2.1.* on ubuntu.
 
 We extract locations of green area.
 """
+
 import gdal
 import glob
 import numpy
@@ -49,6 +49,8 @@ def process_modis(filename, call_back):
 
 
 def extract_green(dataset, geotransform, projection):
+    """"Extract green locations from map.
+    """
 
     band = dataset.GetRasterBand(1)
     if band is None:
@@ -81,17 +83,20 @@ def extract_green(dataset, geotransform, projection):
 
     pyplot.colorbar()
     pyplot.show()
-    zeros = numpy.zeros_like(data)
+
     green = ma.masked_inside(data, 1, 5)
     xarr, yarr = numpy.where(green.mask)
+
+    return data, green
+
     #print(xarr)
     data[green.mask] = 0
     pyplot.imshow(data, norm=norm, cmap=cmap)
     pyplot.colorbar()
     pyplot.show()
 
-    print(len(xarr))
-    print(len(yarr))
+    #print(len(xarr))
+    #print(len(yarr))
 
     lons, lats = determine_lonlat(geotransform, projection, xarr[:], yarr[:])
 

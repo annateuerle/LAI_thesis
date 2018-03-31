@@ -20,32 +20,7 @@ log.setLevel(logging.DEBUG)
 log.addHandler(logging.StreamHandler())
 logging.basicConfig(level=logging.DEBUG)
 
-
-def process_modis(filename, call_back):
-    dataset = gdal.Open(filename, gdal.GA_ReadOnly)
-
-    log.info("Driver: {}/{}".format(
-        dataset.GetDriver().ShortName,
-        dataset.GetDriver().LongName))
-    log.info("Size is {} x {} x {}".format(
-        dataset.RasterXSize,
-        dataset.RasterYSize,
-        dataset.RasterCount))
-
-    log.info("Projection is {}".format(dataset.GetProjection()))
-
-    geotransform, projection = get_meta_geo_info(dataset)
-
-    if geotransform:
-        log.info("Origin = ({}, {})".format(geotransform[0], geotransform[3]))
-        log.info("Pixel Size = ({}, {})".format(geotransform[1], geotransform[5]))
-
-    log.debug('Raster Count %d', dataset.RasterCount)
-
-    for i, ds in enumerate(dataset.GetSubDatasets()):
-        log.debug('%d %s', i+1, ds)
-
-    call_back(dataset, geotransform, projection)
+from read_modis import load_modis_data
 
 
 def extract_green(dataset, geotransform, projection):
@@ -76,20 +51,16 @@ def extract_green(dataset, geotransform, projection):
     ])
 
     norm = mpl.colors.Normalize(vmin=0, vmax=6, clip=True)
-
-    # norm = mpl.colors.BoundaryNorm(bounds, cmap.N)
-
     img = pyplot.imshow(data, norm=norm, cmap=cmap)
 
     pyplot.colorbar()
     pyplot.show()
 
     green = ma.masked_inside(data, 1, 5)
-    xarr, yarr = numpy.where(green.mask)
 
     return data, green
 
-    #print(xarr)
+    xarr, yarr = numpy.where(green.mask)
     data[green.mask] = 0
     pyplot.imshow(data, norm=norm, cmap=cmap)
     pyplot.colorbar()
@@ -105,22 +76,39 @@ def extract_green(dataset, geotransform, projection):
 
     return lons, lats
 
+HDF_SOURCES = [
+    # hdf_name,
+    'HDF4_EOS:EOS_GRID:"D:/LAI_thesis/Landuse_german\\MCD12Q1.A2011001.h18v03.051.2014288191624.hdf":MOD12Q1:Land_Cover_Type_5',
+    # f'HDF4_EOS:EOS_GRID:"{hdf_name}":MOD_Grid_MOD15A2H:Lai_500m',
+    # f'HDF4_EOS:EOS_GRID:"{hdf_name}":MOD_Grid_MOD15A2:Lai_1km',
+    # f'HDF4_EOS: EOS_GRID:"{hdf_name}": MOD12Q1:Land_Cover_Type_5',
+]
 
-if __name__ == '__main__':
-    #hdf LAI directory data
+def main():
+    dataset, geotransform, projection = load_modis_data(HDF_SOURCES[0])
+    extract_green(dataset, geotransform, projection)
 
-    #hdf_files = glob.glob('D:/LAI_thesis/*.hdf')
+
+def print_hdf_info():
+    """Extract hdf layer info
+
+    with extracted layer infromation we can fill configuration.
+    HDF_SOURCES
+
+    :return: log information.
+    """
+
+    # hdf LAI directory data
+    # hdf_files = glob.glob('D:/LAI_thesis/*.hdf')
     hdf_files = glob.glob('D:/LAI_thesis/Landuse_german/*.hdf')
-    # Landuse.
 
     if not hdf_files:
-        raise ValueError('Directory hdf4 lai source wrong.')
+        raise ValueError('Directory hdf4 source wrong.')
 
     for hdf_name in hdf_files:
-        process_modis(
-            #hdf_name,
-            #f'HDF4_EOS:EOS_GRID:"{hdf_name}":MOD_Grid_MOD15A2H:Lai_500m',
-            #f'HDF4_EOS:EOS_GRID:"{hdf_name}":MOD_Grid_MOD15A2:Lai_1km',
-            #f'HDF4_EOS: EOS_GRID:"{hdf_name}": MOD12Q1:Land_Cover_Type_5',
-            'HDF4_EOS:EOS_GRID:"D:/LAI_thesis/Landuse_german\\MCD12Q1.A2011001.h18v03.051.2014288191624.hdf":MOD12Q1:Land_Cover_Type_5',
-            extract_green)
+        load_modis_data(hdf_name)
+
+
+if __name__ == '__main__':
+    # print_hdf_info()
+    main()

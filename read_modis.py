@@ -22,30 +22,6 @@ def get_meta_geo_info(dataset):
     projection = inSRS_converter.ExportToProj4()  # Exports an SRS ref as a Proj4 string usable by PyProj
     return geotransform, projection
 
-def process(filename, call_back):
-    dataset = gdal.Open(filename, gdal.GA_ReadOnly)
-    log.info("Driver: {}/{}".format(
-        dataset.GetDriver().ShortName,
-        dataset.GetDriver().LongName))
-    log.info("Size is {} x {} x {}".format(
-        dataset.RasterXSize,
-        dataset.RasterYSize,
-        dataset.RasterCount))
-
-    log.info("Projection is {}".format(dataset.GetProjection()))
-
-    geotransform, projection = get_meta_geo_info(dataset)
-
-    if geotransform:
-        log.info("Origin = ({}, {})".format(geotransform[0], geotransform[3]))
-        log.info("Pixel Size = ({}, {})".format(geotransform[1], geotransform[5]))
-        log.info(geotransform)
-
-    log.debug('Raster Count %d', dataset.RasterCount)
-
-    for i, ds in enumerate(dataset.GetSubDatasets()):
-        log.debug('%d %s', i+1, ds)
-
     call_back(dataset, geotransform, projection)
 
 
@@ -94,19 +70,72 @@ def determine_lonlat(geotransform, projection, xarr, yarr):
 
 
 def test_location_logic(dataset, geotransform, projection):
+    """For lat, lon covered in dataset test conversion.
+
+    We test that lat lon to x,y and x,y to lat, lon
+    yields the same result!
+
+    :param dataset: not used
+    :param geotransform:
+    :param projection:
+    :return: log output.
+    """
     # +proj=sinu +lon_0=0 +x_0=0 +y_0=0 +a=6371007.181 +b=6371007.181 +units=m +no_defs
     p_modis_grid = Proj(projection)
-    lat = 51.1156
-    lon = 7.5046
+    lon        = 7.491711
+    lat = 51.0630099
+
     log.info('LON %s LAT %s', lon, lat)
     x, y = determine_xy(geotransform, projection, lon, lat)
     log.info('X %s Y %s', x, y)
     lon2, lat2 = determine_lonlat(geotransform, projection, [x], [y])
     log.info('LON2 %s LAT2 %s', lon2, lat2)
 
+    log.info(lon2[0] - lon)
+    log.info(lat2[0] - lat)
+
+    assert abs(lon2[0] - lon) < 0.001
+    assert abs(lat2[0] - lat) < 0.001
+
+
+def load_modis_data(filename):
+    """Extrac modis data and META data from modis file.
+
+    we extract
+        - raster data
+        - geotransform (geo metadata, origin, pixelsize)
+        - projection used.
+
+    :param filename: string (gdal) path to hdf
+    :return: dataset, geotranform, projection
+    """
+    dataset = gdal.Open(filename, gdal.GA_ReadOnly)
+
+    log.info("Driver: {}/{}".format(
+        dataset.GetDriver().ShortName,
+        dataset.GetDriver().LongName))
+    log.info("Size is {} x {} x {}".format(
+        dataset.RasterXSize,
+        dataset.RasterYSize,
+        dataset.RasterCount))
+
+    log.info("Projection is {}".format(dataset.GetProjection()))
+
+    geotransform, projection = get_meta_geo_info(dataset)
+
+    if geotransform:
+        log.info("Origin = ({}, {})".format(geotransform[0], geotransform[3]))
+        log.info("Pixel Size = ({}, {})".format(geotransform[1], geotransform[5]))
+
+    log.debug('Raster Count %d', dataset.RasterCount)
+
+    for i, ds in enumerate(dataset.GetSubDatasets()):
+        log.debug('%d %s', i + 1, ds)
+
+    return dataset, geotransform, projection
+
 
 if __name__ == '__main__':
-    process(
-        'HDF4_EOS:EOS_GRID:"D:/LAI_thesis/Landuse_german\\MCD12Q1.A2011001.h18v03.051.2014288191624.hdf":MOD12Q1:Land_Cover_Type_5',
-        test_location_logic
-    )
+    filename = 'HDF4_EOS:EOS_GRID:"D:/LAI_thesis/Landuse_german\\MCD12Q1.A2011001.h18v03.051.2014288191624.hdf":MOD12Q1:Land_Cover_Type_5'
+    dataset, geotransform, projection = load_modis_data(filename)
+    test_location_logic(dataset, geotransform, projection)

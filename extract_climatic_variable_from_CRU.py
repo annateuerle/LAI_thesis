@@ -24,8 +24,12 @@ startyear = settings['startyear']
 endyear = settings['endyear']
 nc_var = settings['ncvar']
 
-nc = netcdf(f'cru_ts3.24.01.{startyear}.{endyear}.{nc_var}.dat.nc','r')
-
+CACHE = {
+    'nc_tmp': {},
+    'nc_pre': {},
+    'nc_var': {},
+    'nc_pet': {},
+}
 
 
 def ncdump(nc_fid, verb=True):
@@ -93,17 +97,45 @@ def ncdump(nc_fid, verb=True):
     return nc_attrs, nc_dims, nc_vars
 
 
+def fill_cache(ds_var):
+    nc = netcdf(f'cru_ts3.24.01.{startyear}.{endyear}.{ds_var}.dat.nc', 'r')
+    nc_attrs, nc_dims, nc_vars = ncdump(nc)
+    # Extract data from NetCDF file
+    lats = nc.variables['lat'][:]  # extract/copy the data
+    lons = nc.variables['lon'][:]
+    time = nc.variables['time'][:]
+    nc_ds = nc.variables[ds_var][:]
 
-nc_attrs, nc_dims, nc_vars = ncdump(nc)
-# Extract data from NetCDF file
-lats = nc.variables['lat'][:]   # extract/copy the data
-lons = nc.variables['lon'][:]
-time = nc.variables['time'][:]
-nc_ds = nc.variables[nc_var][:]
+    CACHE[ds_var]['lats'] = lats
+    CACHE[ds_var]['lons'] = lons
+    CACHE[ds_var]['time'] = time
+    CACHE[ds_var]['ds'] = nc_ds
 
-# Find the nearest latitude and longitude
-lat_idx = numpy.abs(lats - locations[settings['groupname']]['lat']).argmin()
-lon_idx = numpy.abs(lons - locations[settings['groupname']]['lon']).argmin()
+    CACHE[ds_var]['seen'] = set()
+
+
+def load_ncvariables_for_location(lat, lon):
+    # make sure data is loaded.
+    for ds_var in ['tmp', 'vap', 'pet', 'pre']:
+        if not CACHE[ds_var]:
+            fill_cache(ds_var)
+
+        lats = CACHE[ds_var]['lats']
+        lons = CACHE[ds_var]['lons']
+        ds = CACHE[ds_var]['ds']   # dataset.
+        # Find the nearest latitude and longitude
+        lat_idx = numpy.abs(lats - lat).argmin()
+        lon_idx = numpy.abs(lons - lon).argmin()
+
+        # used as cache key.
+        lat_c = lats[lat_idx]
+        lon_c = lons[lon_idx]
+
+        if (lat_c, lon_c) in CACHE[ds_var]['seen']:
+            continue
+
+        save_location(lat_idx, lon_idx, lat_c, lon_c, ds)
+
 
 settings['X'] = lat_idx
 settings['Y'] = lon_idx
@@ -177,10 +209,10 @@ def draw_plot(time_idx):
     pyplot.show()
 
 
-def save_lai_location():
+def save_lai_location(label, lat, lon, x, y, ds):
     # Write CRU data to HDF5
 
-    values_at_loc = nc_ds[:, settings['X'], settings['Y']]
+    values_at_loc = ds[:, x, y]
 
     print(len(dt_time))
 

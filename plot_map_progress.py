@@ -5,8 +5,10 @@ import time
 import numpy
 import random
 import logging
-import matplotlib
+import matplotlib as mpl
 from sympy.utilities.lambdify import MATH
+mpl.use('GTkAgg')
+
 
 log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)
@@ -16,8 +18,16 @@ matrix_size = 500
 
 from matplotlib import pyplot as plt
 
+CMAP = mpl.colors.ListedColormap([
+    'gray',  # water.
+    'green', # todo
+    'red',   # loaded
+    'darkgray', # not interesting.
+])
 
-def run_map(value_generator, background_data):
+
+
+def run_map(value_generator, background_data, green, modulo=5):
     """
     Display the simulation using matplotlib
     """
@@ -28,24 +38,22 @@ def run_map(value_generator, background_data):
     plt.show(False)
     plt.draw()
 
+    background_data[green.mask] = 1
+    background_data[background_data > 5] = 3
+    norm = mpl.colors.Normalize(vmin=0, vmax=3, clip=True)
+
     tic = time.time()
     niter = 0
 
     for x, y, v in rw:
         niter += 1
         background_data[x][y] = v
-        # restore background
-        if niter % 5 != 0:
+
+        if niter % modulo != 0:
             continue
 
         ax.clear()
-        ax.imshow(background_data, cmap='gray')
-        #fig.canvas.restore_region(background)
-        #plt.imshow(background_data, interpolation='nearest')
-
-        # redraw just the points
-        # fill in the axes rectangle
-        # fig.canvas.blit(ax.bbox)
+        ax.imshow(background_data, norm=norm, cmap=CMAP)
         fig.canvas.draw()
         log.info(niter)
 

@@ -4,31 +4,30 @@ The file to describe all the settings used in the files.
 from matplotlib.backend_bases import LocationEvent
 
 settings = {
-    #hdf file
-    'hdf_dir': 'D:/LAI_thesis/Mala_2001_2010/*.hdf',
-    #'hdf_dir': 'D:/LAI_thesis/Amazon_2001_2010/*.hdf',
-    #'hdf_dir': 'D:/LAI_thesis/USA_2001_2010/*.hdf',
+    # hdf file
+    # 'hdf_dir': 'D:/LAI_thesis/Mala_2001_2010/*.hdf',
+    'hdf_dir': 'D:/LAI_thesis/MODIS_NL_2001_2010/*.hdf',
+    # 'hdf_dir': 'D:/LAI_thesis/Amazon_2001_2010/*.hdf',
+    # 'hdf_dir': 'D:/LAI_thesis/USA_2001_2010/*.hdf',
 
-    #groupname of five locations
-     #'groupname': "mala",
-    #'groupname': "mexico",
-    #'groupname': "usa",
-    #'groupname': "amazon",
+    # groupname of five locations
+    # 'groupname': "mala",
+    # 'groupname': "mexico",
+    # 'groupname': "usa",
+    # 'groupname': "amazon",
     'groupname': "german_forest",
 
-    'hdf5storage': 'lai_cru.hdf5',
-    'X': None,
-    'Y': None,
+    'hdf5storage': 'lai_cru_german.hdf5',
 
-    #time settings
+    # time settings
     'startyear': 2001,
     'endyear': 2010,
-    'ncvar': 'tmp',
-    'time_idx': 42,  # some random month counting from the startyear (for the CRU map)
+    # 'ncvar': 'tmp',
+    'time_idx': 42,   # some random month counting from the startyear (for the CRU map)
 
     # 'prediction_function': lai_pred_tmp,
 
-    #prediction options, 'vap', 'tmp', 'pre', 'pet', 'all',
+    # prediction options, 'vap', 'tmp', 'pre', 'pet', 'all',
     'prediction_option': 'all',
     'normalize': True,  # avg 0.
     'moving_average_months': 0,

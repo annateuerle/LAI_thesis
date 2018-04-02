@@ -36,6 +36,8 @@ def extract_green(dataset, geotransform, projection):
     log.debug('Data type %s', bandtype)
 
     data = band.ReadAsArray()
+    raw_data = numpy.copy(data)
+
     log.debug('Bytes: %s Size %.5d kb', data.nbytes, float(data.nbytes) / 1024)
 
     passer = numpy.logical_and(data > 0, data <= 1000)
@@ -47,18 +49,15 @@ def extract_green(dataset, geotransform, projection):
     cmap = mpl.colors.ListedColormap([
         'gray',
         'lightgreen', 'green', 'green', 'darkgreen',
-        'darkgray'
+        'darkgray',
     ])
 
     norm = mpl.colors.Normalize(vmin=0, vmax=6, clip=True)
-    img = pyplot.imshow(data, norm=norm, cmap=cmap)
-
+    pyplot.imshow(data, norm=norm, cmap=cmap)
     pyplot.colorbar()
     pyplot.show()
 
     green = ma.masked_inside(data, 1, 5)
-
-    return data, green
 
     xarr, yarr = numpy.where(green.mask)
     data[green.mask] = 0
@@ -66,15 +65,12 @@ def extract_green(dataset, geotransform, projection):
     pyplot.colorbar()
     pyplot.show()
 
-    #print(len(xarr))
-    #print(len(yarr))
-
+    log.info('Converting xy to lon lat Locations')
     lons, lats = determine_lonlat(geotransform, projection, xarr[:], yarr[:])
+    log.info('Extracted %d Locations', len(lons))
 
-    log.info(lons[:10])
-    log.info(lats[:10])
+    return raw_data, green, lons, lats, xarr, yarr
 
-    return lons, lats
 
 HDF_SOURCES = [
     # hdf_name,
@@ -84,9 +80,9 @@ HDF_SOURCES = [
     # f'HDF4_EOS: EOS_GRID:"{hdf_name}": MOD12Q1:Land_Cover_Type_5',
 ]
 
-def main():
+def extract():
     dataset, geotransform, projection = load_modis_data(HDF_SOURCES[0])
-    extract_green(dataset, geotransform, projection)
+    return extract_green(dataset, geotransform, projection), geotransform
 
 
 def print_hdf_info():
@@ -111,4 +107,4 @@ def print_hdf_info():
 
 if __name__ == '__main__':
     # print_hdf_info()
-    main()
+    extract()

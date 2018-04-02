@@ -1,6 +1,6 @@
 #Plot of the CRU dataset as a function of time 2001-2010 and a global map of some day from that period.
 
-import datetime # Python standard library datetime  module
+import datetime
 import numpy
 import logging
 import netCDF4
@@ -22,13 +22,14 @@ from settings import locations
 
 startyear = settings['startyear']
 endyear = settings['endyear']
-nc_var = settings['ncvar']
+# nc_var = settings['ncvar']
 
 CACHE = {
-    'nc_tmp': {},
-    'nc_pre': {},
-    'nc_var': {},
-    'nc_pet': {},
+    'tmp': {},
+    'pre': {},
+    'var': {},
+    'vap': {},
+    'pet': {},
 }
 
 
@@ -108,54 +109,52 @@ def fill_cache(ds_var):
 
     CACHE[ds_var]['lats'] = lats
     CACHE[ds_var]['lons'] = lons
-    CACHE[ds_var]['time'] = time
+    CACHE[ds_var]['time'] = fix_time(time)
     CACHE[ds_var]['ds'] = nc_ds
 
-    CACHE[ds_var]['seen'] = set()
 
+def extract_for(geotransform, hdf5=None):
+    """
+    Extract for all cru variables all data at locations and
+    saves it in hdf5 dataset.
 
-def load_ncvariables_for_location(lat, lon):
-    # make sure data is loaded.
+    groupname/lon:lat/nc_var
+
+    :param geotransform:
+    :param hdf5: optional hdf5 file.
+    :return: None.
+    """
+
     for ds_var in ['tmp', 'vap', 'pet', 'pre']:
-        if not CACHE[ds_var]:
-            fill_cache(ds_var)
 
-        lats = CACHE[ds_var]['lats']
-        lons = CACHE[ds_var]['lons']
-        ds = CACHE[ds_var]['ds']   # dataset.
+        # todo use geotransform.
+
         # Find the nearest latitude and longitude
-        lat_idx = numpy.abs(lats - lat).argmin()
-        lon_idx = numpy.abs(lons - lon).argmin()
+        lat_idx = numpy.abs(lats - lat).argmin()  # x.
+        lon_idx = numpy.abs(lons - lon).argmin()  # y.
 
         # used as cache key.
-        lat_c = lats[lat_idx]
-        lon_c = lons[lon_idx]
+        lon_c = lons[lon_idx]  # x
+        lat_c = lats[lat_idx]  # y
 
-        if (lat_c, lon_c) in CACHE[ds_var]['seen']:
-            continue
-
-        save_location(lat_idx, lon_idx, lat_c, lon_c, ds)
+        save_location(lat_c, lon_c, lon_idx, lat_idx, ds_var, ds, hdf5=hdf5)
 
 
-settings['X'] = lat_idx
-settings['Y'] = lon_idx
-
-def fix_time():
+def fix_time(times):
     """
     # List of all times in the file as datetime objects
     """
     dt_time = []
-    for t in time:
-        start = datetime.date(1900, 1, 1)  # This is the "days since" part
+    for t in times:
+        start = datetime.date(1900, 1, 1)   # This is the "days since" part
         delta = datetime.timedelta(int(t))  # Create a time delta object from the number of days
-        offset = start + delta # Add the specified number of days to 1900
+        offset = start + delta   # Add the specified number of days to 1900
         dt_time.append(offset)
-        # print(offset)
 
     return dt_time
 
 
-def draw_basemap():
+def draw_basemap(nc_ds, dt_time, lons, lats):
     """Plot of global temperature on our random day"""
     #
     fig = pyplot.figure()
@@ -186,7 +185,7 @@ def draw_basemap():
     pyplot.show()
 
 
-def draw_plot(time_idx):
+def draw_plot(dt_time, time_idx, lat_idx, lon_idx, nc_ds):
     """
     :param fig:
     :return:
@@ -209,33 +208,53 @@ def draw_plot(time_idx):
     pyplot.show()
 
 
-def save_lai_location(label, lat, lon, x, y, ds):
+SEEN = set()
+
+def save_location(lat_c, lon_c, x, y, ds_var, ds, hdf5 = None):
+    """
+    :param lat: lat used by lai
+    :param lon: lon used by lai
+    :param lat_c: lat used in cru
+    :param lon_c: lon used in cru
+    :param x:  lon index
+    :param y:  lat index
+    :param ds: the nc dataset with x year data
+    :param ds_var: nc label of dataset
+    :return: Nothing
+    """
+    if not hdf5:
+        storage_name = settings['hdf5storage']
+        data_file = h5py.File(storage_name, 'w')
+    else:
+        data_file = hdf5
+
+    cru_groupname = f"{settings['groupname']}/{lon_c}:{lat_c}/{ds_var}"
+
+    if cru_groupname in SEEN:
+        return
+        #del data_file[groupname]
+        #log.debug('deleted %s', groupname)
+    SEEN.add(cru_groupname)
     # Write CRU data to HDF5
-
-    values_at_loc = ds[:, x, y]
-
-    print(len(dt_time))
-
-    storage_name = settings['hdf5storage']
-    data_file = h5py.File(storage_name, 'a')
+    values_at_loc = ds[:, y, x]
     nc_matrix = np.array(
         values_at_loc
     )
-    print(nc_matrix)
+    h5ds = data_file.create_dataset(cru_groupname, data=nc_matrix)
+    # store meta.
+    h5ds.attrs['cru_loc'] = [lon_c, lat_c]
+    h5ds.attrs['cru_idx'] = [x, y]
 
-    groupname = f"{settings['groupname']}-{settings['ncvar']}"
+    log.debug(f'Saved CRU {cru_groupname}')
 
-    if groupname in data_file.keys():
-        del data_file[groupname]
-        log.debug('deleted %s', groupname)
-    data_file.create_dataset(groupname, data=nc_matrix)
-    data_file.close()
-
-    log.debug(f'Saved CRU {groupname}')
+    if not hdf5:
+        data_file.close()
 
 
-dt_time = fix_time()
+if __name__ == '__main__':
+    pass
+    # dt_time = fix_time()
 
-draw_plot(settings['time_idx'])
-draw_basemap()
-save_lai_location()
+    # draw_plot(settings['time_idx'])
+    # draw_basemap()
+    # save_location()

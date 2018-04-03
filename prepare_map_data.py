@@ -52,7 +52,7 @@ def collect_cru():
 
     # open hdf5 file.
     storage_name = settings['hdf5storage']
-    hdf5 = h5py.File(storage_name, 'w')
+    hdf5 = h5py.File(storage_name, 'a')
 
     bbox = read_modis.make_lonlat_bbox(ds)
     log.debug('BBOX: %s', bbox)
@@ -69,7 +69,7 @@ def collect_cru():
 
     hdf5.close()
 
-    plot_map_progress.run_map(pred_cru, dataset, green, grid, modulo=100000)
+    plot_map_progress.run_map(pred_cru, dataset, green, grid, modulo=10000)
 
 
 if __name__ == '__main__':

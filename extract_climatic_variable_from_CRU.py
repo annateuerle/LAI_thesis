@@ -174,12 +174,11 @@ def extract_cru_for_location(lon, lat, groupname, hdf5):
 
         lat_idx = numpy.abs(lats - lat).argmin()
         lon_idx = numpy.abs(lons - lon).argmin()
-        print(lat_idx, lon_idx)
         ds = CACHE[ds_var]['ds']
 
         save_location(
             lon, lat,
-            lon_idx, lat_idx,
+            lat_idx, lon_idx,
             ds_var, ds, hdf5, groupname, old=True)
 
 
@@ -258,7 +257,7 @@ def set_dataset(hdf, groupname, data):
     return hdf.create_dataset(groupname, data=data)
 
 
-def save_location(lat, lon, x, y, ds_var, ds, hdf5, groupname, old=False):
+def save_location(lat, lon, x, y, ds_var, ds, hdf5, groupname=None, old=False):
     """Store cru data into hdf5 file
     :param lat: lat used by lai
     :param lon: lon used by lai
@@ -270,13 +269,15 @@ def save_location(lat, lon, x, y, ds_var, ds, hdf5, groupname, old=False):
     :param old oldstyle group name
     :return: Nothing
     """
+    if not groupname:
+        groupname = settings['groupname']
 
     cru_groupname = f"{groupname}/{lon}:{lat}/{ds_var}"
 
     if old:
         cru_groupname = f"{groupname}/{ds_var}"
 
-    values_at_loc = ds[:, y, x]
+    values_at_loc = ds[:, x, y]
 
     nc_matrix = np.array(
         values_at_loc
@@ -292,7 +293,7 @@ def save_location(lat, lon, x, y, ds_var, ds, hdf5, groupname, old=False):
 
 def main():
     storage_name = settings['hdf5storage']
-    with h5py.File(storage_name, 'w') as data_file:
+    with h5py.File(storage_name, 'a') as data_file:
         for groupname, location in locations.items():
             lon = location['lon']
             lat = location['lat']

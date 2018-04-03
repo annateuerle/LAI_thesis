@@ -9,7 +9,7 @@ import logging
 import matplotlib as mpl
 from sympy.utilities.lambdify import MATH
 
-mpl.use('GTk3Agg')
+# mpl.use('GTk3Agg')
 # mpl.use('Qt5Agg')
 mpl.rc('figure', figsize=(8, 8))
 
@@ -24,7 +24,7 @@ from matplotlib import pyplot as plt
 
 CMAP = mpl.colors.ListedColormap([
     'gray',  # water.
-    'green', # todo
+    'green', # to calculate with
     'red',   # loaded
     'darkgray', # not interesting.
 ])
@@ -78,7 +78,6 @@ def run_map(value_generator, background_data, green, grid, modulo=5):
     print("Average FPS: %.2f" % (niter / (time.time() - tic)))
 
 
-
 def green_simulator(mask):
     def generate_dots():
         xarr, yarr = numpy.where(mask)
@@ -103,4 +102,4 @@ if __name__ == '__main__':
     green = ma.masked_inside(background, 2, 2)
     generator = green_simulator(green)
     # Test the progress plotting of a map
-    run_map(generator, background, green.mask, modulo=50)
+    run_map(generator, background, green.mask, [], modulo=50)

@@ -3,9 +3,9 @@ Script to download datasets and functions to change the datasets.
 Functions:
 1)load_datasets (load all datasets from dhf5 file and put timestamps)
 2)calculate_moving_mean (when in the settings is moving average defined this is calculating datasets
-3)normalized_datasets (the standarize equation is applied to all climatic variables and LAI,
+3)normalized_datasets (the standardize equation is applied to all climatic variables and LAI,
 to see which affects lai model the most)
-4)savitzky_goley (filter to smooth the orginal datasets from NASA to avpid some basic errors)
+4)savitzky_goley (filter to smooth the original datasets from NASA to avoid some basic errors)
 """
 
 from settings import settings
@@ -28,8 +28,13 @@ log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)
 
 
-def load_data():
+def load_data(groupname=None):
+    """Load cru dat for groupname / location from HDF5 storage.
 
+    :param groupname:
+    :return:
+    """
+    groupname = settings['groupname']
     storage_name = settings['hdf5storage']
     with h5py.File(storage_name, "r") as data_file:
 
@@ -42,11 +47,13 @@ def load_data():
 
         global timestamps
         timestamps = time_x[:120]
-        groupname = settings['groupname']
-        for ds_name in datasets.keys():
-            data = list(data_file[f'{groupname}-{ds_name}'])[:120]
+
+        for ds_name in list(datasets.keys()):
+            data = numpy.array(list(data_file[f'{groupname}/{ds_name}'])[:120])
+
             if settings.get('normalize'):
                 log.error("Normalizing %s", ds_name)
+                datasets[f"{ds_name}_original"] = data.copy()
                 data = normalized_dataset(data)
             datasets[ds_name] = data
 
@@ -59,8 +66,9 @@ def calculate_moving_mean():
     """
     moving_avg = []
     ds_var = settings['prediction_option']
-    moving_average_result = [0]
+
     x_months = settings.get('moving_average_months', 0)
+
     if not x_months:
         log.debug('No moving average defined')
         return
@@ -82,9 +90,9 @@ def calculate_moving_mean():
     assert len(moving_average_result) == len(datasets[ds_var])
     datasets[dataset_label] = moving_average_result
 
-    #from matplotlib import pyplot
-    #pyplot.plot(timestamps[8:], moving_average_result[8:], 'b', timestamps, datasets[ds_var], 'g')
-    #pyplot.show()
+    # from matplotlib import pyplot
+    # pyplot.plot(timestamps[8:], moving_average_result[8:], 'b', timestamps, datasets[ds_var], 'g')
+    # pyplot.show()
 
 
 def normalized_dataset(source_data):
@@ -93,14 +101,15 @@ def normalized_dataset(source_data):
     Mean is everywhere 0.
     """
     source_data = numpy.array(source_data)
-    avg = numpy.mean(source_data)
-    std = numpy.std(source_data)
-    # standardeviation
+    # avg = numpy.mean(source_data)
+    # std = numpy.std(source_data)
+    # standard deviation
     mean = numpy.mean
     std = numpy.std
     arr = source_data
     normalized_data = (arr - mean(arr, axis=0)) / std(arr, axis=0)
     return normalized_data
+
 
 def savitzky_golay(y, window_size, order, deriv=0, rate=1):
     """Smooth (and optionally differentiate) data with a Savitzky-Golay filter.
@@ -156,23 +165,23 @@ def savitzky_golay(y, window_size, order, deriv=0, rate=1):
     try:
         window_size = np.abs(np.int(window_size))
         order = np.abs(np.int(order))
-    except(ValueError):
+    except ValueError:
         raise ValueError("window_size and order have to be of type int")
     if window_size % 2 != 1 or window_size < 1:
         raise(TypeError("window_size size must be a positive odd number"))
     if window_size < order + 2:
         raise(TypeError("window_size is too small for the polynomials order"))
     order_range = range(order+1)
-    half_window = (window_size -1) // 2
-    # precompute coefficients
+    half_window = (window_size - 1) // 2
+    # pre compute coefficients
     b = np.mat([[k**i for i in order_range] for k in range(-half_window, half_window+1)])
     m = np.linalg.pinv(b).A[deriv] * rate**deriv * factorial(deriv)
     # pad the signal at the extremes with
     # values taken from the signal itself
-    firstvals = y[0] - np.abs( y[1:half_window+1][::-1] - y[0] )
-    lastvals = y[-1] + np.abs(y[-half_window-1:-1][::-1] - y[-1])
-    y = np.concatenate((firstvals, y, lastvals))
-    return np.convolve( m[::-1], y, mode='valid')
+    first_values = y[0] - np.abs( y[1:half_window+1][::-1] - y[0])
+    last_values = y[-1] + np.abs(y[-half_window-1:-1][::-1] - y[-1])
+    y = np.concatenate((first_values, y, last_values))
+    return np.convolve(m[::-1], y, mode='valid')
 
 
 if __name__ == '__main__':

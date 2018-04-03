@@ -94,9 +94,9 @@ def load_lai_from_hdf():
 
     for hdf_name in hdf_files:
         log.debug('loading %s', hdf_name)
-        read_modis.process(
-            f'HDF4_EOS:EOS_GRID:"{hdf_name}":MOD_Grid_MOD15A2:Lai_1km',
-            process_data)
+        ds, geotransform, projection = read_modis.load_modis_data(
+            f'HDF4_EOS:EOS_GRID:"{hdf_name}":MOD_Grid_MOD15A2:Lai_1km')
+        process_data(ds, geotransform, projection)
 
     # sort values by date.
     LAI_VALUES.sort()
@@ -127,7 +127,7 @@ def save_lai_location(lai_array):
 
     log.debug('X- time count %d', len(time_matrix))
 
-    groupname = settings['groupname'] + '-lai'
+    groupname = settings['groupname'] + '/lai'
 
     def set_dataset(hdf, groupname, data):
         """replace of set data in groupname of hdf file"""
@@ -255,7 +255,7 @@ def plot_month(lai_values_by_month, smooth=[]):
     pyplot.show()
 
 
-if __name__ == '__main__':
+def main():
     load_lai_from_hdf()
     lai_by_month = convert_to_120months(LAI_VALUES, smooth=False)
     lai_by_month_smooth = convert_to_120months(LAI_VALUES)
@@ -269,3 +269,7 @@ if __name__ == '__main__':
     plot_month(lai_by_month, smooth=lai_by_month_smooth)
     # save the lai data.
     save_lai_location(lai_by_month_smooth)
+
+
+if __name__ == '__main__':
+    main()

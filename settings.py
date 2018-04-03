@@ -17,18 +17,18 @@ settings = {
     # 'groupname': "amazon",
     'groupname': "german_forest",
 
-    'hdf5storage': 'lai_cru_german.hdf5',
+    'hdf5storage': 'lai_cru.hdf5',
 
     # time settings
     'startyear': 2001,
     'endyear': 2010,
     # 'ncvar': 'tmp',
-    'time_idx': 42,   # some random month counting from the startyear (for the CRU map)
+    'time_idx': 42,   # some random month counting from the start year (for the CRU map)
 
     # 'prediction_function': lai_pred_tmp,
 
     # prediction options, 'vap', 'tmp', 'pre', 'pet', 'all',
-    'prediction_option': 'all',
+    'prediction_option': 'tmp',
     'normalize': True,  # avg 0.
     'moving_average_months': 0,
 
@@ -36,7 +36,7 @@ settings = {
 
 locations = {
     # location: lat lon
-    'mala': {'lat': 4.819, 'lon': 102.500},
+    # 'mala': {'lat': 4.819, 'lon': 102.500},
     'german_forest': {'lat': 51.1156, 'lon': 7.5046},
     'amazon': {'lat': -5.709000, 'lon': -66.295},
     'mexico': {'lat': 16.6515, 'lon': -94.6572},

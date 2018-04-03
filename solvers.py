@@ -181,7 +181,7 @@ def solver_function_v2(datasets):
 if __name__ == '__main__':
     # load hdf5 measurement data.
     timestamps, datasets = load_data()
-    calculate_moving_mean()
+    # calculate_moving_mean()
 
-    #solver_function(datasets)
+    # solver_function(datasets)
     solver_function_v2(datasets)

@@ -109,8 +109,12 @@ def fill_cache(ds_var):
 
     CACHE[ds_var]['lats'] = lats
     CACHE[ds_var]['lons'] = lons
-    CACHE[ds_var]['time'] = fix_time(time)
+    ts_dt = fix_time(time)
+    CACHE[ds_var]['time'] = ts_dt
+    CACHE[ds_var]['days'] = time
     CACHE[ds_var]['ds'] = nc_ds
+
+    # draw_basemap(nc_ds, ts_dt, lons, lats, ds_var)
 
 
 def extract_for(lon_min, lat_min, lon_max, lat_max, hdf5=None):
@@ -159,6 +163,26 @@ def extract_for(lon_min, lat_min, lon_max, lat_max, hdf5=None):
         return grid
 
 
+def extract_cru_for_location(lon, lat, groupname, hdf5):
+
+    for ds_var in ['tmp', 'vap', 'pet', 'pre']:
+        if not CACHE.get(ds_var):
+            fill_cache(ds_var)
+
+        lats = numpy.array(CACHE[ds_var]['lats'])
+        lons = numpy.array(CACHE[ds_var]['lons'])
+
+        lat_idx = numpy.abs(lats - lat).argmin()
+        lon_idx = numpy.abs(lons - lon).argmin()
+        print(lat_idx, lon_idx)
+        ds = CACHE[ds_var]['ds']
+
+        save_location(
+            lon, lat,
+            lon_idx, lat_idx,
+            ds_var, ds, hdf5, groupname, old=True)
+
+
 def fix_time(times):
     """
     # List of all times in the file as datetime objects
@@ -173,12 +197,12 @@ def fix_time(times):
     return dt_time
 
 
-def draw_basemap(nc_ds, dt_time, lons, lats):
+def draw_basemap(nc_ds, dt_time, lons, lats, nc_var):
     """Plot of global temperature on our random day"""
     #
     fig = pyplot.figure()
 
-    #fig.subplots_adjust(left=0., right=1., bottom=0., top=0.9)
+    # fig.subplots_adjust(left=0., right=1., bottom=0., top=0.9)
     # Setup the map. See http://matplotlib.org/basemap/users/mapsetup.html
     # for other projections.
     # m = Basemap(projection='moll', llcrnrlat=-90, urcrnrlat=90, llcrnrlon=0, urcrnrlon=360, resolution='c', lon_0=0)
@@ -227,7 +251,14 @@ def draw_plot(dt_time, time_idx, lat_idx, lon_idx, nc_ds):
     pyplot.show()
 
 
-def save_location(lat, lon, x, y, ds_var, ds, hdf5=None):
+def set_dataset(hdf, groupname, data):
+    """replace or set data in groupname of hdf file"""
+    if groupname in hdf.keys():
+        del hdf[groupname]
+    return hdf.create_dataset(groupname, data=data)
+
+
+def save_location(lat, lon, x, y, ds_var, ds, hdf5, groupname, old=False):
     """Store cru data into hdf5 file
     :param lat: lat used by lai
     :param lon: lon used by lai
@@ -235,36 +266,39 @@ def save_location(lat, lon, x, y, ds_var, ds, hdf5=None):
     :param y:  lat index
     :param ds: the nc dataset with x year data
     :param ds_var: nc label of dataset
+    :param hdf5: the hdf5 file opbject
+    :param old oldstyle group name
     :return: Nothing
     """
-    if not hdf5:
-        storage_name = settings['hdf5storage']
-        data_file = h5py.File(storage_name, 'w')
-    else:
-        data_file = hdf5
 
-    cru_groupname = f"{settings['groupname']}/{lon}:{lat}/{ds_var}"
+    cru_groupname = f"{groupname}/{lon}:{lat}/{ds_var}"
 
-    values_at_loc = ds[:, x, y]
+    if old:
+        cru_groupname = f"{groupname}/{ds_var}"
+
+    values_at_loc = ds[:, y, x]
+
     nc_matrix = np.array(
         values_at_loc
     )
 
-    h5ds = data_file.create_dataset(cru_groupname, data=nc_matrix)
+    h5ds = set_dataset(hdf5, cru_groupname, nc_matrix)
+
     # store meta.
     h5ds.attrs['cru_loc'] = [lon, lat]
     h5ds.attrs['cru_idx'] = [x, y]
-
     log.debug(f'Saved CRU {cru_groupname}')
 
-    if not hdf5:
-        data_file.close()
+
+def main():
+    storage_name = settings['hdf5storage']
+    with h5py.File(storage_name, 'w') as data_file:
+        for groupname, location in locations.items():
+            lon = location['lon']
+            lat = location['lat']
+            extract_cru_for_location(lon, lat, groupname, data_file)
 
 
 if __name__ == '__main__':
-    pass
-    # dt_time = fix_time()
+    main()
 
-    # draw_plot(settings['time_idx'])
-    # draw_basemap()
-    # save_location()

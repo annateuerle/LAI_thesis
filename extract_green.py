@@ -65,16 +65,17 @@ def extract_green(dataset, geotransform, projection):
     pyplot.colorbar()
     pyplot.show()
 
-    log.info('Converting xy to lon lat Locations')
-    lons, lats = determine_lonlat(geotransform, projection, xarr[:], yarr[:])
-    log.info('Extracted %d Locations', len(lons))
+    #log.info('Converting xy to lon lat Locations')
+    #lons, lats = determine_lonlat(geotransform, projection, xarr[:], yarr[:])
+    #log.info('Extracted %d Locations', len(lons))
 
-    return raw_data, green, lons, lats, xarr, yarr
+    return dataset, raw_data, green, xarr, yarr
 
 
 HDF_SOURCES = [
     # hdf_name,
     'HDF4_EOS:EOS_GRID:"D:/LAI_thesis/Landuse_german\\MCD12Q1.A2011001.h18v03.051.2014288191624.hdf":MOD12Q1:Land_Cover_Type_5',
+    # 'HDF4_EOS:EOS_GRID:"/media/stephan/blender1/laithesis/Landuse_german/MCD12Q1.A2011001.h18v03.051.2014288191624.hdf":MOD12Q1:Land_Cover_Type_5'  # noqa
     # f'HDF4_EOS:EOS_GRID:"{hdf_name}":MOD_Grid_MOD15A2H:Lai_500m',
     # f'HDF4_EOS:EOS_GRID:"{hdf_name}":MOD_Grid_MOD15A2:Lai_1km',
     # f'HDF4_EOS: EOS_GRID:"{hdf_name}": MOD12Q1:Land_Cover_Type_5',
@@ -82,7 +83,7 @@ HDF_SOURCES = [
 
 def extract():
     dataset, geotransform, projection = load_modis_data(HDF_SOURCES[0])
-    return extract_green(dataset, geotransform, projection), geotransform
+    return extract_green(dataset, geotransform, projection)
 
 
 def print_hdf_info():

@@ -113,7 +113,7 @@ def fill_cache(ds_var):
     CACHE[ds_var]['ds'] = nc_ds
 
 
-def extract_for(geotransform, hdf5=None):
+def extract_for(lon_min, lat_min, lon_max, lat_max, hdf5=None):
     """
     Extract for all cru variables all data at locations and
     saves it in hdf5 dataset.
@@ -126,18 +126,37 @@ def extract_for(geotransform, hdf5=None):
     """
 
     for ds_var in ['tmp', 'vap', 'pet', 'pre']:
+        if not CACHE.get(ds_var):
+            fill_cache(ds_var)
 
-        # todo use geotransform.
+        lats = numpy.array(CACHE[ds_var]['lats'])
+        lons = numpy.array(CACHE[ds_var]['lons'])
+        ds = CACHE[ds_var]['ds']
 
-        # Find the nearest latitude and longitude
-        lat_idx = numpy.abs(lats - lat).argmin()  # x.
-        lon_idx = numpy.abs(lons - lon).argmin()  # y.
+        # invalidate all locations outside our given bbox
+        # with 1 extra box spaceing
+        padding_lat = 0.55
+        padding_lon = 0.55
+        lats[lats < lat_min - padding_lat] = 0
+        lats[lats > lat_max + padding_lat] = 0
+        lons[lons < lon_min - padding_lon] = 0
+        lons[lons > lon_max + padding_lon] = 0
 
-        # used as cache key.
-        lon_c = lons[lon_idx]  # x
-        lat_c = lats[lat_idx]  # y
+        grid = []
 
-        save_location(lat_c, lon_c, lon_idx, lat_idx, ds_var, ds, hdf5=hdf5)
+        for lon_idx, lat in enumerate(lats):
+            for lat_idx, lon in enumerate(lons):
+                if lat == 0:
+                    continue
+                if lon == 0:
+                    continue
+                grid.append((lon, lat))
+                save_location(
+                    lon, lat,
+                    lon_idx, lat_idx,
+                    ds_var, ds, hdf5=hdf5)
+
+        return grid
 
 
 def fix_time(times):
@@ -208,14 +227,10 @@ def draw_plot(dt_time, time_idx, lat_idx, lon_idx, nc_ds):
     pyplot.show()
 
 
-SEEN = set()
-
-def save_location(lat_c, lon_c, x, y, ds_var, ds, hdf5 = None):
-    """
+def save_location(lat, lon, x, y, ds_var, ds, hdf5=None):
+    """Store cru data into hdf5 file
     :param lat: lat used by lai
     :param lon: lon used by lai
-    :param lat_c: lat used in cru
-    :param lon_c: lon used in cru
     :param x:  lon index
     :param y:  lat index
     :param ds: the nc dataset with x year data
@@ -228,21 +243,16 @@ def save_location(lat_c, lon_c, x, y, ds_var, ds, hdf5 = None):
     else:
         data_file = hdf5
 
-    cru_groupname = f"{settings['groupname']}/{lon_c}:{lat_c}/{ds_var}"
+    cru_groupname = f"{settings['groupname']}/{lon}:{lat}/{ds_var}"
 
-    if cru_groupname in SEEN:
-        return
-        #del data_file[groupname]
-        #log.debug('deleted %s', groupname)
-    SEEN.add(cru_groupname)
-    # Write CRU data to HDF5
-    values_at_loc = ds[:, y, x]
+    values_at_loc = ds[:, x, y]
     nc_matrix = np.array(
         values_at_loc
     )
+
     h5ds = data_file.create_dataset(cru_groupname, data=nc_matrix)
     # store meta.
-    h5ds.attrs['cru_loc'] = [lon_c, lat_c]
+    h5ds.attrs['cru_loc'] = [lon, lat]
     h5ds.attrs['cru_idx'] = [x, y]
 
     log.debug(f'Saved CRU {cru_groupname}')

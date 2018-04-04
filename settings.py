@@ -6,16 +6,17 @@ from matplotlib.backend_bases import LocationEvent
 settings = {
     # hdf file
     # 'hdf_dir': 'D:/LAI_thesis/Mala_2001_2010/*.hdf',
-    'hdf_dir': 'D:/LAI_thesis/MODIS_NL_2001_2010/*.hdf',
-    # 'hdf_dir': 'D:/LAI_thesis/Amazon_2001_2010/*.hdf',
-    # 'hdf_dir': 'D:/LAI_thesis/USA_2001_2010/*.hdf',
+    #'hdf_dir': 'D:/LAI_thesis/MODIS_NL_2001_2010/*.hdf',
+    #'hdf_dir': 'D:/LAI_thesis/Amazon_2001_2010/*.hdf',
+    'hdf_dir': 'D:/LAI_thesis/USA_2001_2010/*.hdf',
+    #'hdf_dir': 'D:/LAI_thesis/Mexico_2001_2010/*.hdf',
 
     # groupname of five locations
     # 'groupname': "mala",
-    # 'groupname': "mexico",
-    # 'groupname': "usa",
-    # 'groupname': "amazon",
-    'groupname': "german_forest",
+    #'groupname': "mexico",
+    'groupname': "usa",
+    #'groupname': "amazon",
+    #'groupname': "german_forest",
 
     'hdf5storage': 'lai_cru.hdf5',
 

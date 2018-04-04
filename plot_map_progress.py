@@ -89,7 +89,7 @@ def green_simulator(mask):
 
 # test this plotting code.
 if __name__ == '__main__':
-    MATRIX_SIZE = 150
+    MATRIX_SIZE = 100
     # random map 11 ground types
     # background = numpy.zeros((MATRIX_SIZE, MATRIX_SIZE))
     background = numpy.random.randint(0, 4, size=(MATRIX_SIZE, MATRIX_SIZE))

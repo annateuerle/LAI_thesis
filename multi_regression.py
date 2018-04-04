@@ -107,13 +107,13 @@ def main():
         # 'p3': ['tmp', 'pre', 'pet'],
         # 'p2': ['tmp', 'pre',],
         'gdd': [tmp_gdd, pre_one, 'pre', 'pet'],
-        'gdd2': [tmp_gdd, pre_one],
-        'gdd3': [tmp_gdd],
-        'gdd4': [tmp_gdd, 'tmp'],
-        'gdd5': [tmp_gdd, 'tmp', 'vap'],
-        'p1-t': ['tmp'],
+        #'gdd2': [tmp_gdd, pre_one],
+        #'gdd3': [tmp_gdd],
+        #'gdd4': [tmp_gdd, 'tmp'],
+        #'gdd5': [tmp_gdd, 'tmp', 'vap'],
+        #'p1-t': ['tmp'],
         # 'p1-v': ['vap'],
-        'p2-tv': ['tmp', 'vap'],
+        #'p2-tv': ['tmp', 'vap'],
     }
     make_models(models_options, datasets, timestamps)
     aic_criterion(models_options, datasets)

@@ -29,10 +29,10 @@ def get_meta_geo_info(dataset):
 
 
 def determine_xy(geotransform, projection, lon, lat):
-    """Calculate x,y in dataset.
+    """Calculate x, y in dataset.
 
     Given geotransform , projection, latitude and longitude
-    we find the nearest x,y close to the given lat lon
+    we find the nearest x, y close to the given lat lon
     """
     # +proj=sinu +lon_0=0 +x_0=0 +y_0=0 +a=6371007.181 +b=6371007.181 +units=m +no_defs
     p_modis_grid = Proj(projection)
@@ -53,14 +53,14 @@ def coord2pixel(geotransform, xp, yp):
     a1 = np.array([[a, b], [d, e]])
     b1 = np.array([xp-xoff, yp-yoff])
     xy = np.linalg.solve(a1, b1)
-    x = math.ceil(xy[0])
-    y = math.ceil(xy[1])
+    x = round(xy[0])
+    y = round(xy[1])
     return [x, y]
 
 
 def determine_lonlat(geotransform, projection, px, py):
     """
-    find lon, lat for given x, y.
+    find lon, lat for given pixel x, y.
 
     :param geotransform:
     :param projection:
@@ -68,8 +68,8 @@ def determine_lonlat(geotransform, projection, px, py):
     :param py:
     :return: lon, lat
     """
-    # now correct for origin and pixelsize to get x,y on globe.
     x, y = pixel2coord(geotransform, px, py)
+    # x, y = coord2pixel(geotransform, px, py)
     p_modis_grid = Proj(projection)
     lon, lat = p_modis_grid(x, y, inverse=True)
     return lon, lat
@@ -97,10 +97,10 @@ def make_lonlat_bbox(dataset):
     lon4, lat4 = determine_lonlat(geotransform, projection, size_x, size_y)
 
     return (
-        min(lon1, lon2, lon3, lon4),
-        min(lat1, lat2, lat3, lat4),
-        max(lon1, lon2, lon3, lon4),
-        max(lat1, lat2, lat3, lat4)
+        (lon1, lat1),
+        (lon2, lat2),
+        (lon3, lat3),
+        (lon4, lat4),
     )
 
 
@@ -129,12 +129,12 @@ def test_location_logic(_dataset, geotransform, projection):
     log.info(lon2 - lon)
     log.info(lat2 - lat)
 
-    #assert abs(lon2 - lon) == 0.0
-    #assert abs(lat2 - lat) == 0.0
+    # assert abs(lon2 - lon) == 0.0
+    # assert abs(lat2 - lat) == 0.0
 
 
 def load_modis_data(filename):
-    """Extrac modis data and META data from modis file.
+    """Extract modis data and META data from modis file.
 
     we extract
         - raster data
@@ -173,8 +173,8 @@ def load_modis_data(filename):
 
 
 def main():
-    # filename = 'HDF4_EOS:EOS_GRID:"D:/LAI_thesis/Landuse_german\\MCD12Q1.A2011001.h18v03.051.2014288191624.hdf":MOD12Q1:Land_Cover_Type_5'  # noqa
-    filename = 'HDF4_EOS:EOS_GRID:"/media/stephan/blender1/laithesis/Landuse_german/MCD12Q1.A2011001.h18v03.051.2014288191624.hdf":MOD12Q1:Land_Cover_Type_5'  # noqa
+    filename = 'HDF4_EOS:EOS_GRID:"D:/LAI_thesis/Landuse_german\\MCD12Q1.A2011001.h18v03.051.2014288191624.hdf":MOD12Q1:Land_Cover_Type_5'  # noqa
+    # filename = 'HDF4_EOS:EOS_GRID:"/media/stephan/blender1/laithesis/Landuse_german/MCD12Q1.A2011001.h18v03.051.2014288191624.hdf":MOD12Q1:Land_Cover_Type_5'  # noqa
     dataset, geotransform, projection = load_modis_data(filename)
     test_location_logic(dataset, geotransform, projection)
 

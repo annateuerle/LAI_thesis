@@ -1,24 +1,21 @@
 """"
 The file to describe all the settings used in the files.
 """
+import os
 from matplotlib.backend_bases import LocationEvent
 
-settings = {
-    # hdf file
-    # 'hdf_dir': 'D:/LAI_thesis/Mala_2001_2010/*.hdf',
-    #'hdf_dir': 'D:/LAI_thesis/MODIS_NL_2001_2010/*.hdf',
-    #'hdf_dir': 'D:/LAI_thesis/Amazon_2001_2010/*.hdf',
-    'hdf_dir': 'D:/LAI_thesis/USA_2001_2010/*.hdf',
-    #'hdf_dir': 'D:/LAI_thesis/Mexico_2001_2010/*.hdf',
+PROJECT_ROOT = os.path.dirname(__file__)
 
-    # groupname of five locations
+conf = {
+
+    #  groupname of five locations
     # 'groupname': "mala",
-    #'groupname': "mexico",
-    'groupname': "usa",
-    #'groupname': "amazon",
-    #'groupname': "german_forest",
+    # 'groupname': "mexico",
+    # 'groupname': "usa",
+    # 'groupname': "amazon",
+    'groupname': "german_forest",
 
-    'hdf5storage': 'lai_cru.hdf5',
+    'hdf5storage': 'lai_cru2.hdf5',
 
     # time settings
     'startyear': 2001,
@@ -37,12 +34,22 @@ settings = {
 
 locations = {
     # location: lat lon
-    # 'mala': {'lat': 4.819, 'lon': 102.500},
+    'mala': {'lat': 4.819, 'lon': 102.500},
     'german_forest': {'lat': 51.1156, 'lon': 7.5046},
     'amazon': {'lat': -5.709000, 'lon': -66.295},
     'mexico': {'lat': 16.6515, 'lon': -94.6572},
     'usa': {'lat': 33.2985, 'lon': -92.4491},
 }
+
+
+lai_locations = {
+    'male': 'Mala_2001_2010',
+    'german_forest': 'MODIS_NL_2001_2010',
+    'amazon': 'Amazon_2001_2010',
+    'usa': 'USA_2001_2010',
+    'mexico': 'Mexico_2001_2010',
+}
+
 
 """
 1. Kierspe, Germany

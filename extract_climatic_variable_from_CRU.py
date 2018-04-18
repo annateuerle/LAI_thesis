@@ -17,12 +17,12 @@ log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)
 log.addHandler(logging.StreamHandler())
 
-from settings import settings
+from settings import conf
 from settings import locations
 
-startyear = settings['startyear']
-endyear = settings['endyear']
-# nc_var = settings['ncvar']
+startyear = conf['startyear']
+endyear = conf['endyear']
+# nc_var = conf['ncvar']
 
 CACHE = {
     'tmp': {},
@@ -116,51 +116,74 @@ def fill_cache(ds_var):
 
     # draw_basemap(nc_ds, ts_dt, lons, lats, ds_var)
 
+def store_grid_from_cru(grid, grid_idx, hdf5=None):
+    """Given we know which locations we need to calculated
 
-def extract_for(lon_min, lat_min, lon_max, lat_max, hdf5=None):
-    """
-    Extract for all cru variables all data at locations and
-    saves it in hdf5 dataset.
+    extract information in grid and store it in hdf5
 
     groupname/lon:lat/nc_var
-
-    :param geotransform:
-    :param hdf5: optional hdf5 file.
-    :return: None.
     """
 
     for ds_var in ['tmp', 'vap', 'pet', 'pre']:
         if not CACHE.get(ds_var):
             fill_cache(ds_var)
 
-        lats = numpy.array(CACHE[ds_var]['lats'])
-        lons = numpy.array(CACHE[ds_var]['lons'])
         ds = CACHE[ds_var]['ds']
 
-        # invalidate all locations outside our given bbox
-        # with 1 extra box spaceing
-        padding_lat = 0.55
-        padding_lon = 0.55
-        lats[lats < lat_min - padding_lat] = 0
-        lats[lats > lat_max + padding_lat] = 0
-        lons[lons < lon_min - padding_lon] = 0
-        lons[lons > lon_max + padding_lon] = 0
+        for i, (lon, lat) in enumerate(grid):
+            lon_idx, lat_idx = grid_idx[i]
 
-        grid = []
+            values_at_loc = ds[:, lat_idx, lon_idx]
+            save_location(lon, lat, ds_var, values_at_loc, hdf5)
 
-        for lon_idx, lat in enumerate(lats):
-            for lat_idx, lon in enumerate(lons):
-                if lat == 0:
-                    continue
-                if lon == 0:
-                    continue
-                grid.append((lon, lat))
-                save_location(
-                    lon, lat,
-                    lon_idx, lat_idx,
-                    ds_var, ds, hdf5=hdf5)
 
-        return grid
+def extract_grid_for(bbox) # , hdf5=None, save=True):
+    """
+    Extract for all cru variables all data at locations and
+    saves it in hdf5 dataset.
+
+
+    :param hdf5: optional hdf5 file.
+    :param save: save / update hdf5 data
+    :return: None.
+    """
+    lats = [p[0] for p in bbox]
+    lons = [p[1] for p in bbox]
+
+    lat_min = min(lats)
+    lon_min = min(lons)
+
+    nc = netcdf(f'cru_ts3.24.01.{startyear}.{endyear}.{ds_var}.dat.nc', 'r')
+    nc_attrs, nc_dims, nc_vars = ncdump(nc)
+    lats = nc.variables['lat'][:]  # extract/copy the data
+    lons = nc.variables['lon'][:]
+
+    lats = numpy.array(lats)
+    lons = numpy.array(lons)
+
+    # invalidate all locations outside our given bbox
+    # with 1 extra box spacing
+    padding_lat = 0.55
+    padding_lon = 0.55
+    lats[lats < lat_min - padding_lat] = None
+    lats[lats > lat_max + padding_lat] = None
+    lons[lons < lon_min - padding_lon] = None
+    lons[lons > lon_max + padding_lon] = None
+
+    grid = []
+    grid_idx = []
+
+    for lon_idx, lat in enumerate(lats):
+        for lat_idx, lon in enumerate(lons):
+            if lat == None:
+                continue
+            if lon == None:
+                continue
+
+            grid.append((lon, lat))
+            grid_idx.append((lon_idx, lat_idx))
+
+    return grid, grid_idx
 
 
 def extract_cru_for_location(lon, lat, groupname, hdf5):
@@ -176,10 +199,10 @@ def extract_cru_for_location(lon, lat, groupname, hdf5):
         lon_idx = numpy.abs(lons - lon).argmin()
         ds = CACHE[ds_var]['ds']
 
+        values_at_loc = ds[:, lat_idx, lon_idx]
+
         save_location(
-            lon, lat,
-            lat_idx, lon_idx,
-            ds_var, ds, hdf5, groupname, old=True)
+            lon, lat, ds_var, values_at_loc, hdf5, groupname, old=True)
 
 
 def fix_time(times):
@@ -209,7 +232,7 @@ def draw_basemap(nc_ds, dt_time, lons, lats, nc_var):
 
     m.drawcoastlines()
     m.drawmapboundary()
-    time_idx = settings['time_idx']
+    time_idx = conf['time_idx']
     # Make the plot continuous
     ds_cyclic, lons_cyclic = addcyclic(nc_ds[time_idx, :, :], lons)
     # Shift the grid so lons go from -180 to 180 instead of 0 to 360.
@@ -257,7 +280,7 @@ def set_dataset(hdf, groupname, data):
     return hdf.create_dataset(groupname, data=data)
 
 
-def save_location(lat, lon, x, y, ds_var, ds, hdf5, groupname=None, old=False):
+def save_location(lat, lon, ds_var, values, hdf5, groupname=None, old=False):
     """Store cru data into hdf5 file
     :param lat: lat used by lai
     :param lon: lon used by lai
@@ -270,17 +293,15 @@ def save_location(lat, lon, x, y, ds_var, ds, hdf5, groupname=None, old=False):
     :return: Nothing
     """
     if not groupname:
-        groupname = settings['groupname']
+        groupname = conf['groupname']
 
     cru_groupname = f"{groupname}/{lon}:{lat}/{ds_var}"
 
     if old:
         cru_groupname = f"{groupname}/{ds_var}"
 
-    values_at_loc = ds[:, x, y]
 
-    nc_matrix = np.array(
-        values_at_loc
+    nc_matrix = np.array(values)
     )
 
     h5ds = set_dataset(hdf5, cru_groupname, nc_matrix)
@@ -292,7 +313,7 @@ def save_location(lat, lon, x, y, ds_var, ds, hdf5, groupname=None, old=False):
 
 
 def main():
-    storage_name = settings['hdf5storage']
+    storage_name = conf['hdf5storage']
     with h5py.File(storage_name, 'a') as data_file:
         for groupname, location in locations.items():
             lon = location['lon']

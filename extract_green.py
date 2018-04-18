@@ -4,9 +4,11 @@ Parse and load hdf4 modis files, needs gdal 2.1.* on ubuntu.
 We extract locations of green area.
 """
 
+import os
 import gdal
 import glob
 import numpy
+import settings
 from matplotlib import pyplot
 import matplotlib as mpl
 import logging
@@ -65,21 +67,23 @@ def extract_green(dataset, geotransform, projection):
     pyplot.colorbar()
     pyplot.show()
 
-    #log.info('Converting xy to lon lat Locations')
-    #lons, lats = determine_lonlat(geotransform, projection, xarr[:], yarr[:])
-    #log.info('Extracted %d Locations', len(lons))
-
+    # log.info('Converting xy to lon lat Locations')
+    # lons, lats = determine_lonlat(geotransform, projection, xarr[:], yarr[:])
+    # log.info('Extracted %d Locations', len(lons))
     return dataset, raw_data, green, xarr, yarr
 
 
+ground_usage = os.path.join(
+    settings.PROJECT_ROOT,
+    "Landuse_german",
+    "MCD12Q1.A2011001.h18v03.051.2014288191624.hdf"
+)
+
+
 HDF_SOURCES = [
-    # hdf_name,
-    'HDF4_EOS:EOS_GRID:"D:/LAI_thesis/Landuse_german\\MCD12Q1.A2011001.h18v03.051.2014288191624.hdf":MOD12Q1:Land_Cover_Type_5',
-    # 'HDF4_EOS:EOS_GRID:"/media/stephan/blender1/laithesis/Landuse_german/MCD12Q1.A2011001.h18v03.051.2014288191624.hdf":MOD12Q1:Land_Cover_Type_5'  # noqa
-    # f'HDF4_EOS:EOS_GRID:"{hdf_name}":MOD_Grid_MOD15A2H:Lai_500m',
-    # f'HDF4_EOS:EOS_GRID:"{hdf_name}":MOD_Grid_MOD15A2:Lai_1km',
-    # f'HDF4_EOS: EOS_GRID:"{hdf_name}": MOD12Q1:Land_Cover_Type_5',
+    f'HDF4_EOS:EOS_GRID:"{ground_usage}":MOD12Q1:Land_Cover_Type_5',
 ]
+
 
 def extract():
     dataset, geotransform, projection = load_modis_data(HDF_SOURCES[0])

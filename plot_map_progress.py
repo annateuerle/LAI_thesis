@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-
+#
 import numpy as np
 import time
 import numpy
@@ -9,7 +9,7 @@ import logging
 import matplotlib as mpl
 from sympy.utilities.lambdify import MATH
 
-# mpl.use('GTk3Agg')
+mpl.use('GTk3Agg')
 # mpl.use('Qt5Agg')
 mpl.rc('figure', figsize=(8, 8))
 
@@ -23,17 +23,16 @@ matrix_size = 500
 from matplotlib import pyplot as plt
 
 CMAP = mpl.colors.ListedColormap([
-    'gray',  # water.
-    'green', # to calculate with
-    'red',   # loaded
+    'gray',     # water.
+    'green',    # to calculate with
+    'red',      # done / loaded
     'darkgray', # not interesting.
 ])
 
 
 
-def run_map(value_generator, background_data, green, grid, modulo=5):
-    """
-    Display the simulation using matplotlib
+def run_map(value_generator, background_data, green, grids, modulo=5):
+    """Display the simulation using matplotlib
     """
 
     fig, ax = plt.subplots(1, 1)
@@ -52,16 +51,16 @@ def run_map(value_generator, background_data, green, grid, modulo=5):
     niter = 0
 
     def map_update():
-
         ax.clear()
         ax.imshow(background_data, norm=norm, cmap=CMAP)
 
-        for x, y in grid:
-            plt.plot(x, y, '+b')
+        for grd, c in zip(grids, ['ro', 'b+']):
+            for x, y in grd:
+                plt.plot(x, y, c)
 
         fig.canvas.draw()
         log.info(niter)
-        plt.pause(10.001)  # I ain't needed!!!
+        plt.pause(0.001)  # It ain't needed!!!
 
     for x, y, v in rw:
         niter += 1

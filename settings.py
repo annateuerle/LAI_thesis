@@ -15,7 +15,7 @@ conf = {
     # 'groupname': "amazon",
     'groupname': "german_forest",
 
-    'hdf5storage': 'lai_cru2.hdf5',
+    'hdf5storage': 'lai_cube6.hdf5',
 
     # time settings
     'startyear': 2001,

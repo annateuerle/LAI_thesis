@@ -2,7 +2,7 @@
 #If in the settings is defined moving average, then it takes moving average lai.
 
 import logging
-from settings import settings
+from settings import conf
 
 log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)
@@ -21,8 +21,8 @@ def get_dataset(datasets, ds_var):
 
     ds_tmp = datasets['tmp']
 
-    if settings.get('moving_average_months'):
-        months = settings['moving_average_months']
+    if conf.get('moving_average_months'):
+        months = conf['moving_average_months']
         ds_tmp = datasets[f'{ds_var}_moving_avg_{months}']
 
     return ds_tmp

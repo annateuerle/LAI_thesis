@@ -132,7 +132,6 @@ def store_grid_from_cru(grid, grid_idx, hdf5=None):
 
         for i, (lon, lat) in enumerate(grid):
             lon_idx, lat_idx = grid_idx[i]
-
             values_at_loc = ds[:, lat_idx, lon_idx]
             save_location(lon, lat, ds_var, values_at_loc, hdf5)
 

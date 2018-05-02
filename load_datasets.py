@@ -5,10 +5,10 @@ Functions:
 2)calculate_moving_mean (when in the settings is moving average defined this is calculating datasets
 3)normalized_datasets (the standardize equation is applied to all climatic variables and LAI,
 to see which affects lai model the most)
-4)savitzky_goley (filter to smooth the original datasets from NASA to avoid some basic errors)
+4) savitzky_goley (filter to smooth the original LAI datasets from NASA to avoid some basic errors)
 """
 
-from settings import settings
+from settings import conf
 import h5py
 import numpy
 import logging
@@ -34,8 +34,8 @@ def load_data(groupname=None):
     :param groupname:
     :return:
     """
-    groupname = settings['groupname']
-    storage_name = settings['hdf5storage']
+    groupname = conf['groupname']
+    storage_name = conf['hdf5storage']
     with h5py.File(storage_name, "r") as data_file:
 
         x_time = data_file['timestamps']
@@ -51,7 +51,7 @@ def load_data(groupname=None):
         for ds_name in list(datasets.keys()):
             data = numpy.array(list(data_file[f'{groupname}/{ds_name}'])[:120])
 
-            if settings.get('normalize'):
+            if conf.get('normalize'):
                 log.error("Normalizing %s", ds_name)
                 datasets[f"{ds_name}_original"] = data.copy()
                 data = normalized_dataset(data)
@@ -60,14 +60,25 @@ def load_data(groupname=None):
     return timestamps, datasets
 
 
+def load_data_cru_cube():
+    datasets = {}
+    timestamps = h5util.load_timestamps()
+
+    return {
+        'timestamp': timestamps,
+
+    }
+
+
+
 def calculate_moving_mean():
     """
     :return: a plot.
     """
     moving_avg = []
-    ds_var = settings['prediction_option']
+    ds_var = conf['prediction_option']
 
-    x_months = settings.get('moving_average_months', 0)
+    x_months = conf.get('moving_average_months', 0)
 
     if not x_months:
         log.debug('No moving average defined')

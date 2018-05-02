@@ -1,6 +1,8 @@
 """
 Parse and load hdf4 modis files, needs gdal 2.1.* on ubuntu
 and create monthly time-series of lai values which matches the cru data.
+
+ DEPRICATED in favour of create_lai_cube!
 """
 import gdal
 import glob
@@ -27,7 +29,7 @@ log.addHandler(logging.StreamHandler())
 LAI_VALUES = []
 
 
-def process_data(dataset, geotransform, projection, plot_map=False):
+def extract_lai(dataset, geotransform, projection, plot_map=False):
     """
 
     :param dataset: hdf source
@@ -96,7 +98,7 @@ def load_lai_from_hdf():
         log.debug('loading %s', hdf_name)
         ds, geotransform, projection = read_modis.load_modis_data(
             f'HDF4_EOS:EOS_GRID:"{hdf_name}":MOD_Grid_MOD15A2:Lai_1km')
-        process_data(ds, geotransform, projection)
+        extract_lai(ds, geotransform, projection)
 
     # sort values by date.
     LAI_VALUES.sort()
@@ -257,6 +259,7 @@ def plot_month(lai_values_by_month, smooth=[]):
 
 def main():
     load_lai_from_hdf()
+
     lai_by_month = convert_to_120months(LAI_VALUES, smooth=False)
     lai_by_month_smooth = convert_to_120months(LAI_VALUES)
 

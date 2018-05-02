@@ -1,6 +1,8 @@
 """"
-Description of solver functions written from the the beginning.
+Description of solver functions written from the
+the beginning.
 """
+
 from load_datasets import load_data
 from load_datasets import calculate_moving_mean
 import logging
@@ -126,7 +128,8 @@ def solver_function(datasets):
 
 def calc_rmse(lai, pred_lai):
     rmse = 0
-    # TODO handle moving average array size differences
+    # TODO handle moving average array
+    # size differences
     for i in range(lai.size):
         log.debug(f'{i}, lai:{lai[i]}, pred:{pred_lai[i]}')
         rmse += (pred_lai - lai) ** 2
@@ -158,15 +161,14 @@ def solver_function_v2(datasets):
 
     y1 = datasets['lai']
     y = numpy.array(y1[x_months:])
-    y_all = numpy.array(y1)
+    # y_all = numpy.array(y1)
 
-    # We can rewrite the line equation as y = Ap, where A = [[x 1]] and p = [[m], [c]].
+    # We can rewrite the line equation as y = Ap,
+    # where A = [[x 1]] and p = [[m], [c]].
     # Now use lstsq to solve for p:
     A = numpy.vstack([x, numpy.ones(len(x))]).T  # [[x 1]]
-
     lin_answer = numpy.linalg.lstsq(A, y, rcond=None)
     m, c = lin_answer[0]
-
     log.info(f'm {m}, c: {c}')
 
     y_pred = c + m * x_all
@@ -174,7 +176,6 @@ def solver_function_v2(datasets):
     calc_rmse(y, y_pred[x_months:])
 
     datasets[f'pred_{ds_var}'] = y_pred
-
     predictive_models.plot(timestamps, datasets)
 
 
@@ -182,6 +183,5 @@ if __name__ == '__main__':
     # load hdf5 measurement data.
     timestamps, datasets = load_data()
     # calculate_moving_mean()
-
     # solver_function(datasets)
     solver_function_v2(datasets)

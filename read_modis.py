@@ -69,9 +69,7 @@ def determine_lonlat(geotransform, projection, px, py):
     :return: lon, lat
     """
     x, y = pixel2coord(geotransform, px, py)
-    # x, y = coord2pixel(geotransform, px, py)
-    p_modis_grid = Proj(projection)
-    lon, lat = p_modis_grid(x, y, inverse=True)
+    lon, lat = projection(x, y, inverse=True)
     return lon, lat
 
 
@@ -91,10 +89,11 @@ def make_lonlat_bbox(dataset):
     size_x = dataset.RasterXSize
     size_y = dataset.RasterYSize
 
-    lon1, lat1 = determine_lonlat(geotransform, projection, 0, 0)
-    lon2, lat2 = determine_lonlat(geotransform, projection, 0, size_y)
-    lon3, lat3 = determine_lonlat(geotransform, projection, size_x, 0)
-    lon4, lat4 = determine_lonlat(geotransform, projection, size_x, size_y)
+    proj = Proj(projection)
+    lon1, lat1 = determine_lonlat(geotransform, proj, 0, 0)
+    lon2, lat2 = determine_lonlat(geotransform, proj, 0, size_y)
+    lon3, lat3 = determine_lonlat(geotransform, proj, size_x, 0)
+    lon4, lat4 = determine_lonlat(geotransform, proj, size_x, size_y)
 
     return (
         (lon1, lat1),
@@ -123,7 +122,9 @@ def test_location_logic(_dataset, geotransform, projection):
     log.info('LON %s LAT %s', lon, lat)
     x, y = determine_xy(geotransform, projection, lon, lat)
     log.info('X %s Y %s', x, y)
-    lon2, lat2 = determine_lonlat(geotransform, projection, x, y)
+
+    p_modis_grid = Proj(projection)
+    lon2, lat2 = determine_lonlat(geotransform, p_modis_grid, x, y)
     log.info('LON2 %s LAT2 %s', lon2, lat2)
 
     log.info(lon2 - lon)

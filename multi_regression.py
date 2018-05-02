@@ -1,23 +1,28 @@
-#Script to predict LAI based on the all cliamtic variables. Fit a line, y = ax + by + cz + dq + constant
+"""
+Predict LAI based on the climatic variables.
+Fit a line, y = ax + by + cz + dq + constant
+"""
 
 from load_datasets import load_data
 from load_datasets import normalized_dataset
 import logging
 import numpy
+import numpy as np
 import predictive_models
 import math
 
-
+import extract_CRU
+import create_lai_cube
 from predictive_models import calc_rmse
 
 log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)
-log.addHandler(logging.StreamHandler())
 
 
 def solver_function_multi(datasets, timestamps, predictors=('tmp', 'pre', 'vap', 'pet'), label='all'):
     """
-    Fit a line, y = ax + by + cz + dq + constant, through some noisy data-points
+    Fit a line, y = ax + by + cz + dq + constant,
+    through some noisy data-points
 
     :param datasets:  the source data
     :param timestamps datetimes of time period. used to make graph.
@@ -40,6 +45,7 @@ def solver_function_multi(datasets, timestamps, predictors=('tmp', 'pre', 'vap',
         measurements.append(input_ar)
 
     y1 = datasets['lai']
+
     y = numpy.array(y1)
 
     measurements.append(numpy.ones(len(y)))
@@ -62,8 +68,7 @@ def solver_function_multi(datasets, timestamps, predictors=('tmp', 'pre', 'vap',
     calc_rmse(y, y_pred)
 
     datasets[f'pred_{label}'] = y_pred
-
-    predictive_models.plot(timestamps, datasets, plot_predictors, p_label=label)
+    # predictive_models.plot(timestamps, datasets, plot_predictors, p_label=label)
 
 
 def make_models(models_to_make, datasets, timestamps):
@@ -80,7 +85,7 @@ def aic_criterion(models_to_make, datasets):
         R = numpy.square(lai - predicted_lai).sum()
         # print(R)
         m = len(ds_label) # len variables
-        n = len(lai)  # measurements
+        n = len(lai)      # measurements
         A = n * math.log((2*math.pi)/n) + n + 2 + n * math.log(R) + 2 * m
         print('%s %.4f' % (p, A))
 
@@ -99,26 +104,53 @@ def pre_one(datasets):
     return preone
 
 
+def make_predictor_grid():
+    """
+    Given CRU grid. create models
+    """
+    pass
+
+def find_green_locations(point):
+    pass
+
+
 def main():
+    import h5util
+    from plot_map_progress import plot_lai
     # load hdf5 measurement data.
-    timestamps, datasets = load_data()
     models_options = {
         # 'p4': ['tmp', 'pre', 'pet', 'vap'],
         # 'p3': ['tmp', 'pre', 'pet'],
-        # 'p2': ['tmp', 'pre',],
+        'p2': ['tmp', 'pre',],
         'gdd': [tmp_gdd, pre_one, 'pre', 'pet'],
-        #'gdd2': [tmp_gdd, pre_one],
-        #'gdd3': [tmp_gdd],
-        #'gdd4': [tmp_gdd, 'tmp'],
-        #'gdd5': [tmp_gdd, 'tmp', 'vap'],
-        #'p1-t': ['tmp'],
+        # 'gdd2': [tmp_gdd, pre_one],
+        # 'gdd3': [tmp_gdd],
+        # 'gdd4': [tmp_gdd, 'tmp'],
+        # 'gdd5': [tmp_gdd, 'tmp', 'vap'],
+        # 'p1-t': ['tmp'],
         # 'p1-v': ['vap'],
-        #'p2-tv': ['tmp', 'vap'],
+        # 'p2-tv': ['tmp', 'vap'],
     }
-    make_models(models_options, datasets, timestamps)
-    aic_criterion(models_options, datasets)
+
+    h5util.print_paths()
+    grid = h5util.load_dataset('grid')
+    green = h5util.load_dataset('green')
+    lai = h5util.load_dataset('lai/smooth_month')
+    geotransform, projection, bbox = create_lai_cube.extract_lai_meta()
+    points = extract_CRU.find_xy_cru_grid(
+        geotransform, projection, 1200, 1200, grid)
+
+    plot_lai(lai[1, :, :], green, points)
+
+    for point, item in zip(points, grid):
+        print(point)
+        print(item)
+
+
+    # timestamps, datasets = load_data()
+    # make_models(models_options, datasets, timestamps)
+    # aic_criterion(models_options, datasets)
 
 
 if __name__ == '__main__':
     main()
-

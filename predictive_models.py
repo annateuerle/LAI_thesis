@@ -2,8 +2,6 @@
 Plot of the all datasets (cru and lai).
 Uses the predictive function below and calculates rmse.
 """
-from typing import Dict, Any, Union
-
 # import prepare_data
 import logging
 from load_datasets import load_data
@@ -12,7 +10,7 @@ from load_datasets import load_data
 from matplotlib import pyplot
 import numpy as np
 from functions_pred_lai import prediction_options
-from settings import settings
+from settings import conf
 from settings import locations
 
 
@@ -25,7 +23,7 @@ def plot(timestamps, datasets, predictors=None, p_label=None):
     TENYEAR = 120
 
     if not p_label:
-        p_label = settings['prediction_option']
+        p_label = conf['prediction_option']
 
     ds_to_plot = {}
 
@@ -113,7 +111,7 @@ def plot(timestamps, datasets, predictors=None, p_label=None):
 
 
 def make_prediction(datasets):
-    label = settings['prediction_option']
+    label = conf['prediction_option']
     prediction_function = prediction_options[label]
     pred_lai = prediction_function(datasets)
     datasets[f'pred_{label}'] = pred_lai
@@ -133,11 +131,11 @@ def calc_rmse(predictions, targets):
 
 
 def main():
-    timestamps, datasets = load_data(settings['groupname'])
+    timestamps, datasets = load_data(conf['groupname'])
     # calculate_moving_mean()
     make_prediction(datasets)
     plot(timestamps, datasets)
 
+
 if __name__ == '__main__':
     main()
-
